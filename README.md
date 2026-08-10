@@ -4,6 +4,8 @@
 
 Proyecto desarrollado como trabajo colaborativo para la **Diplomatura en Inteligencia Artificial**.
 
+> Última actualización de la organización del equipo: **10/08/2026**.
+
 ---
 
 ## 🎯 Objetivo
@@ -40,17 +42,19 @@ REGIONES DE INTERÉS (ROI)
    ↓
 HISTOGRAMAS
    ↓
-DETECCIÓN DEL EVENTO
+DETECCIÓN DEL CAMBIO
    ↓
-CAPTURA POSTERIOR
+IDENTIFICACIÓN Y VALIDACIÓN DEL COMANDO
+   ↓
+VENTANA DE CAPTURA POSTERIOR
    ↓
 EVALUACIÓN DE CALIDAD
    ↓
 MEJOR FRAME
    ↓
-CLASIFICACIÓN
+GUARDADO Y PROCESAMIENTO
    ↓
-PROCESAMIENTO
+CLASIFICACIÓN Y ORGANIZACIÓN
    ↓
 REPORTE PDF
 ```
@@ -67,40 +71,38 @@ El proyecto utiliza principalmente herramientas trabajadas durante la Diplomatur
 - **NumPy**
 - **Matplotlib**
 
-Durante las siguientes etapas se evaluará incorporar:
+En etapas posteriores se podrá evaluar incorporar:
 
 - ReportLab o FPDF;
 - OCR;
 - modelos de visión;
 - modelos de lenguaje para generación de resúmenes.
 
+Estas extensiones son complementarias y no deben impedir completar primero el flujo principal.
+
 ---
 
-## 👥 Equipo
+## 👥 Equipo actual
 
-El proyecto está desarrollado por:
+El proyecto está desarrollado por cuatro integrantes:
 
 - **Nicolás**
-- **Lucas**
-- **Patricia**
 - **Diego**
 - **Walter**
 - **Daniela**
 
 ---
 
-## 📋 Distribución del trabajo
+## 📋 Distribución actual del trabajo
 
 | Integrante | Requerimientos | Responsabilidad | Estado |
 |---|---|---|---|
-| Nicolás | RF01–RF03 | Video, frames y regiones de interés | ✅ Realizado |
-| Lucas | RF04–RF05 | Histogramas y detección de cambios | ⬜ Pendiente |
-| Patricia | RF06–RF07 | Identificación y validación de comandos | ⬜ Pendiente |
-| Diego | RF08–RF09 | Ventana temporal y captura posterior | ⬜ Pendiente |
-| Walter | RF10–RF12 + RF15 | Calidad, mejor frame y procesamiento | ⬜ Pendiente |
-| Daniela | RF13–RF14 + RF16 | Clasificación, organización y PDF | ⬜ Pendiente |
+| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | RF01–RF03 ✅ / RF04–RF05 ⬜ |
+| Diego | RF06–RF09 | Comandos, validación, ventana temporal y captura posterior | ⬜ Pendiente |
+| Walter | RF10–RF12 + RF15 | Calidad, selección, guardado y procesamiento de imagen | ⬜ Pendiente |
+| Daniela | RF13–RF14 + RF16 | Clasificación, organización por temas y PDF | ⬜ Pendiente |
 
-La planificación detallada y el registro de avances se encuentran en:
+La planificación detallada, las entradas y salidas de cada módulo y el registro de avances se encuentran en:
 
 ➡️ [PLAN_TRABAJO_PIZARRA_SNAP.md](PLAN_TRABAJO_PIZARRA_SNAP.md)
 
@@ -108,18 +110,19 @@ La planificación detallada y el registro de avances se encuentran en:
 
 ## ✅ Estado actual
 
-Actualmente se encuentran implementados y validados:
-
 ### RF01 — Lectura de video
 
-- carga del video;
-- apertura mediante OpenCV;
+**✅ Realizado**
+
+- carga y apertura del video con OpenCV;
 - obtención de FPS;
 - resolución;
 - cantidad de frames;
 - duración.
 
 ### RF02 — Procesamiento de frames
+
+**✅ Realizado**
 
 - lectura de frames;
 - representación mediante arrays de NumPy;
@@ -130,25 +133,26 @@ Actualmente se encuentran implementados y validados:
 
 ### RF03 — Regiones de interés
 
-Se definieron tres ROI correspondientes a:
+**✅ Realizado**
+
+Se definieron, recortaron y validaron visualmente las tres ROI:
 
 - 📸 Captura normal;
 - ⭐ Concepto importante;
 - 📌 Fin de tema.
 
-Las tres regiones fueron recortadas y validadas visualmente.
-
 ### Próxima etapa
 
-**RF04 — Análisis de histogramas**
+**RF04 — Análisis de histogramas**  
+**RF05 — Detección de cambios**
 
-Responsable principal: **Lucas**.
+Responsable: **Nicolás**.
 
 ---
 
-## 📓 Notebook
+## 📓 Notebook principal
 
-El notebook principal se encuentra en:
+El notebook oficial del proyecto se encuentra en:
 
 ➡️ [notebooks/PizarraSnap.ipynb](notebooks/PizarraSnap.ipynb)
 
@@ -158,19 +162,17 @@ El desarrollo se realiza inicialmente en **Google Colab**.
 
 ## 🎥 Video de prueba
 
-El proyecto utiliza un video grabado específicamente para desarrollar y validar el sistema.
-
-El archivo no se almacena directamente en GitHub debido a su tamaño.
+Archivo utilizado:
 
 ```text
 proyecto_pizzarasnap.mp4
 ```
 
-El video se comparte con el equipo mediante **Google Drive**:
+El video no se almacena directamente en GitHub debido a su tamaño. Se comparte mediante **Google Drive**:
 
 ➡️ [Ver o descargar video de prueba](https://drive.google.com/file/d/1Vcixn88RZXEH3cLLovZQJBfYXKoIKlMb/view?usp=drive_link)
 
-> Para que todos los integrantes puedan acceder, el archivo debe estar compartido en Drive con permisos adecuados para el equipo.
+> El archivo de Drive debe mantenerse con permisos adecuados para los integrantes del equipo.
 
 ---
 
@@ -188,28 +190,40 @@ pizarra-snap/
     └── PizarraSnap.ipynb
 ```
 
+Las carpetas adicionales se crearán solamente cuando el proyecto realmente las necesite, evitando documentar estructuras que todavía no existen.
+
 ---
 
 ## 🔄 Metodología de trabajo
 
-El desarrollo se realizará de forma colaborativa.
+El desarrollo se realiza de forma secuencial porque cada módulo depende de la salida validada del anterior.
 
 Cada módulo deberá:
 
-1. partir de la versión validada del módulo anterior;
-2. mantener código claro y comentado;
-3. incluir pruebas de funcionamiento;
-4. documentar sus entradas y salidas;
-5. actualizar la planificación;
-6. realizar una revisión antes de integrarse a `main`.
+1. partir de la versión actualizada de `main`;
+2. trabajar en una rama propia;
+3. modificar solamente el bloque correspondiente;
+4. mantener código simple, claro y comentado;
+5. incluir al menos una prueba de funcionamiento;
+6. documentar claramente su entrada y su salida;
+7. actualizar el plan de trabajo cuando cambie de estado;
+8. abrir un Pull Request;
+9. pasar una revisión cruzada antes de integrarse a `main`.
 
-Para reducir conflictos, las nuevas funcionalidades se desarrollarán en ramas independientes y posteriormente se integrarán mediante Pull Requests.
+### Ramas previstas
+
+```text
+feature/rf04-rf05-nicolas
+feature/rf06-rf09-diego
+feature/rf10-rf12-rf15-walter
+feature/rf13-rf14-rf16-daniela
+```
 
 ---
 
 ## 📚 Conceptos de la Diplomatura aplicados
 
-A lo largo del proyecto se utilizarán, cuando resulten necesarios:
+A lo largo del proyecto se utilizarán, cuando aporten valor real:
 
 - Python;
 - arrays y matrices;
@@ -239,6 +253,6 @@ A lo largo del proyecto se utilizarán, cuando resulten necesarios:
 
 **En desarrollo.**
 
-La primera etapa correspondiente a video, frames y regiones de interés ya se encuentra completada.
+La base correspondiente a **RF01–RF03** ya está completada y validada.
 
-El próximo módulo corresponde al análisis de histogramas y detección de cambios.
+El desarrollo continúa con **RF04–RF05: histogramas y detección de cambios**.
