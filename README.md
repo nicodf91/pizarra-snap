@@ -166,9 +166,11 @@ El archivo no se almacena directamente en GitHub debido a su tamaño.
 proyecto_pizzarasnap.mp4
 ```
 
-El video será compartido con el equipo mediante **Google Drive**.
+El video se comparte con el equipo mediante **Google Drive**:
 
-> El enlace de acceso se agregará aquí cuando el archivo esté disponible para todos los integrantes.
+➡️ [Ver o descargar video de prueba](https://drive.google.com/file/d/1Vcixn88RZXEH3cLLovZQJBfYXKoIKlMb/view?usp=drive_link)
+
+> Para que todos los integrantes puedan acceder, el archivo debe estar compartido en Drive con permisos adecuados para el equipo.
 
 ---
 
