@@ -1,0 +1,8 @@
+# Evito subir videos pesados al repositorio.
+*.mp4
+
+# Evito archivos temporales de Jupyter/Colab.
+.ipynb_checkpoints/
+
+# Evito archivos temporales de Python.
+__pycache__/
