@@ -3,7 +3,7 @@
 **Proyecto:** Pizarra Snap  
 **Equipo actual:** Nicolás, Diego, Walter y Daniela  
 **Documento vivo:** este archivo debe actualizarse a medida que cada módulo se complete, pruebe e integre.  
-**Última actualización:** 10/08/2026
+**Última actualización:** 11/08/2026
 
 ---
 
@@ -44,10 +44,10 @@ Cada módulo deberá:
 
 | Estado | Significado |
 |---|---|
-| ✅ REALIZADO | Código implementado y validado |
+| ✅ REALIZADO | Código implementado y validado por el responsable |
 | 🟡 EN PROGRESO | El integrante está trabajando en el módulo |
 | ⬜ PENDIENTE | Todavía no comenzó |
-| 🔁 EN REVISIÓN | Implementado y pendiente de prueba/revisión |
+| 🔁 EN REVISIÓN | Implementado y pendiente de revisión cruzada antes de integrar |
 | ⚠️ AJUSTE | Funciona, pero requiere calibración o mejora |
 
 ---
@@ -59,8 +59,8 @@ Cada módulo deberá:
 | RF01 | Lectura de video | Nicolás | ✅ REALIZADO |
 | RF02 | Procesamiento de frames | Nicolás | ✅ REALIZADO |
 | RF03 | Regiones de interés (ROI) | Nicolás | ✅ REALIZADO |
-| RF04 | Análisis de histogramas | Nicolás | ⬜ PENDIENTE |
-| RF05 | Detección de cambios | Nicolás | ⬜ PENDIENTE |
+| RF04 | Análisis de histogramas | Nicolás | ✅ REALIZADO |
+| RF05 | Detección de cambios | Nicolás | ✅ REALIZADO |
 | RF06 | Identificación del comando | Diego | ⬜ PENDIENTE |
 | RF07 | Validación de la acción | Diego | ⬜ PENDIENTE |
 | RF08 | Ventana temporal posterior | Diego | ⬜ PENDIENTE |
@@ -83,8 +83,8 @@ Cada módulo deberá:
 RF01 ✅ REALIZADO
 RF02 ✅ REALIZADO
 RF03 ✅ REALIZADO
-RF04 ⬜ PENDIENTE
-RF05 ⬜ PENDIENTE
+RF04 ✅ REALIZADO
+RF05 ✅ REALIZADO
 ```
 
 ## Objetivo general del módulo
@@ -224,9 +224,7 @@ Shape obtenido:
 
 ### Nota de continuidad
 
-Las coordenadas se consideran **válidas para continuar el proyecto**.
-
-Durante RF04/RF05 se comprobará experimentalmente si el tamaño de alguna ROI necesita una calibración mínima para mejorar la diferencia entre histogramas. Ese eventual ajuste forma parte de la calibración del detector y no reabre RF03.
+Las coordenadas se mantuvieron **válidas durante las pruebas de RF04/RF05** y no fue necesario modificar su tamaño para el video de prueba actual.
 
 ### Base disponible para RF04/RF05
 
@@ -234,8 +232,7 @@ Durante RF04/RF05 se comprobará experimentalmente si el tamaño de alguna ROI n
 - frames accesibles;
 - frame base validado;
 - coordenadas de las tres ROI;
-- variables `roi_normal`, `roi_importante` y `roi_fin`;
-- notebook funcionando hasta RF03.
+- variables `roi_normal`, `roi_importante` y `roi_fin`.
 
 ---
 
@@ -243,21 +240,21 @@ Durante RF04/RF05 se comprobará experimentalmente si el tamaño de alguna ROI n
 
 ### Estado
 
-**⬜ PENDIENTE**
+**✅ REALIZADO**
 
-### Tareas previstas
+### Trabajo realizado
 
-- Convertir cada ROI de BGR a escala de grises.
-- Aplicar un suavizado para reducir pequeñas variaciones de iluminación.
-- Utilizar `GaussianBlur`.
-- Incorporar el concepto de **kernel o matriz de convolución**, inicialmente con un kernel de `5 × 5`.
-- Calcular el histograma de cada ROI.
-- Normalizar los histogramas si corresponde.
-- Graficar y explicar los histogramas.
-- Obtener ejemplos de:
-  - ROI libre;
-  - ROI cubierta.
-- Comparar cuantitativamente ambos estados.
+- Se convirtió cada ROI de BGR a escala de grises mediante `cv2.cvtColor()`.
+- Se aplicó `GaussianBlur` con kernel `5 × 5` para reducir pequeñas variaciones y ruido sin perder la forma general de los símbolos.
+- Se calcularon histogramas de 256 niveles de intensidad mediante `cv2.calcHist()`.
+- Se normalizaron los histogramas con norma L1 mediante `cv2.normalize()` para comparar distribuciones independientemente del tamaño de cada ROI.
+- Se graficaron y explicaron los histogramas de las tres regiones.
+- Se compararon visualmente ejemplos de ROI libre y cubierta.
+- Se encapsuló el preprocesamiento y cálculo en la función reutilizable:
+
+```python
+calcular_histograma_roi(roi)
+```
 
 ### Conceptos de la Diplomatura involucrados
 
@@ -266,13 +263,20 @@ Durante RF04/RF05 se comprobará experimentalmente si el tamaño de alguna ROI n
 - convolución;
 - Gaussian Blur;
 - histogramas;
+- normalización;
 - arrays NumPy;
 - OpenCV;
 - Matplotlib.
 
-### Resultado esperado
+### Resultado validado
 
-Una función o procedimiento capaz de recibir una ROI y producir una representación preparada para comparar su estado visual.
+Cada ROI puede transformarse en un histograma normalizado preparado para una comparación cuantitativa.
+
+Las sumas de los histogramas normalizados quedaron aproximadamente en `1.0`, con pequeñas diferencias atribuibles a precisión de punto flotante.
+
+### Salida hacia RF05
+
+Histograma normalizado de cada ROI listo para comparar el estado actual con un estado libre de referencia.
 
 ---
 
@@ -280,38 +284,107 @@ Una función o procedimiento capaz de recibir una ROI y producir una representac
 
 ### Estado
 
-**⬜ PENDIENTE**
+**✅ REALIZADO**
 
-### Tareas previstas
+### Trabajo realizado
 
-- Elegir una métrica de comparación de histogramas.
-- Comparar el estado de referencia con los frames siguientes.
-- Experimentar con un umbral de cambio.
-- Medir:
-  - ROI libre contra ROI libre;
-  - ROI libre contra ROI cubierta.
-- Ajustar el umbral para reducir falsos positivos.
-- Verificar el comportamiento frente a:
-  - sombras;
-  - pequeños cambios de iluminación;
-  - movimiento cercano;
-  - cobertura intencional del símbolo.
+- Se eligió la **distancia de Bhattacharyya** mediante `cv2.compareHist()` como métrica de comparación.
+- Se creó una función para obtener una ROI desde un momento determinado del video:
 
-### Resultado esperado
+```python
+obtener_roi_en_segundo(...)
+```
 
-Detectar de manera confiable si una ROI cambió suficientemente como para considerarla cubierta.
+- Se creó una función para medir la distancia entre el histograma actual y un histograma de referencia:
+
+```python
+medir_distancia_roi(...)
+```
+
+- Se estableció un umbral experimental:
+
+```python
+umbral_cobertura = 0.40
+```
+
+- Se creó la clasificación de estado:
+
+```text
+distancia < 0.40  → LIBRE
+distancia >= 0.40 → CUBIERTA
+```
+
+- Se integró la medición y clasificación en:
+
+```python
+detectar_estado_roi(...)
+```
+
+### Pruebas realizadas
+
+Se evaluaron estados libres, momentos de transición y coberturas claras en las tres ROI.
+
+| ROI | Libre vs. libre | Transición | Cobertura clara |
+|---|---:|---:|---:|
+| 📸 Captura normal | 0.1117 | 0.2544 | 0.7967 |
+| ⭐ Concepto importante | 0.0622 | 0.1747 | 0.8461 |
+| 📌 Fin de tema | 0.0824 | 0.1483 | 0.5488 |
+
+También se probó movimiento cercano a la ROI de Captura normal sin una cobertura suficiente, con una distancia aproximada de `0.1767`, que permaneció correctamente como `LIBRE`.
+
+### Prueba automática final
+
+Se utilizaron `assert` para comprobar que:
+
+- los casos libres se clasifican como `LIBRE`;
+- las transiciones iniciales permanecen como `LIBRE`;
+- las coberturas claras se clasifican como `CUBIERTA`.
+
+La prueba final terminó correctamente con el mensaje:
+
+```text
+✅ RF05 validado correctamente.
+Las tres ROI distinguen estados LIBRE y CUBIERTA con el umbral experimental.
+```
+
+### Limitación conocida
+
+El umbral `0.40` fue calibrado experimentalmente sobre el video de prueba actual. No es un valor universal y puede requerir ajuste si cambian:
+
+- cámara;
+- iluminación;
+- pizarra;
+- tamaño o posición de las ROI.
+
+RF05 detecta un **cambio visual suficiente**, pero no decide por sí solo si la cobertura fue intencional. La validación de la secuencia:
+
+```text
+VISIBLE → CUBIERTA → VISIBLE
+```
+
+corresponde a RF07.
+
+### Nota de integración sobre las referencias
+
+Durante la calibración se utilizaron momentos libres cercanos a cada evento para medir con precisión la separación entre estados. Para una ejecución continua, el siguiente módulo deberá partir de referencias limpias obtenidas en una inicialización común o en una fase explícita de calibración, evitando depender de segundos elegidos manualmente del video.
 
 ### Entrega de Nicolás a Diego
 
-La salida debe permitir saber para cada ROI si se encuentra:
+La salida disponible para cada ROI es:
 
 ```text
-LIBRE
-o
-CUBIERTA
+(distancia, estado)
 ```
 
-Además deberán quedar disponibles las variables y/o funciones necesarias para que RF06 pueda identificar cuál de las tres zonas fue activada.
+con:
+
+```text
+estado = LIBRE
+o
+estado = CUBIERTA
+```
+
+Quedan disponibles las coordenadas de las tres ROI y las funciones necesarias para que RF06 pueda asociar cada región con su comando correspondiente.
 
 ---
 
@@ -640,7 +713,7 @@ Archivo PDF final organizado y legible.
 ```text
 Nicolás
 RF01 → RF02 → RF03 → RF04 → RF05
- ✅      ✅      ✅      ⬜      ⬜
+ ✅      ✅      ✅      ✅      ✅
                          │
                          ▼
 Diego
@@ -677,7 +750,7 @@ ORGANIZACIÓN Y PDF
 
 # 10. Revisión cruzada
 
-Para evitar que cada integrante trabaje de manera aislada, los módulos pendientes tendrán un responsable principal y otra persona que deberá probarlos antes de considerarlos cerrados.
+Para evitar que cada integrante trabaje de manera aislada, los módulos tendrán un responsable principal y otra persona que deberá probarlos antes de integrarlos a `main`.
 
 | Responsable | Revisor sugerido |
 |---|---|
@@ -819,9 +892,9 @@ Evitar comentarios conversacionales como:
 
 ---
 
-# 15. Checklist para cerrar un módulo
+# 15. Checklist antes de integrar un módulo a `main`
 
-Antes de cambiar un módulo a **✅ REALIZADO**:
+Antes de integrar un módulo:
 
 - [ ] El código ejecuta sin errores.
 - [ ] Los comentarios son claros.
@@ -829,9 +902,10 @@ Antes de cambiar un módulo a **✅ REALIZADO**:
 - [ ] Se entiende la salida del módulo.
 - [ ] Existe al menos una prueba.
 - [ ] El responsable revisó los resultados.
-- [ ] El revisor cruzado pudo ejecutarlo.
 - [ ] El notebook fue actualizado.
 - [ ] `PLAN_TRABAJO_PIZARRA_SNAP.md` fue actualizado.
+- [ ] El revisor cruzado pudo ejecutarlo.
+- [ ] El Pull Request fue revisado.
 - [ ] El cambio fue integrado a la rama principal.
 
 ---
@@ -840,46 +914,59 @@ Antes de cambiar un módulo a **✅ REALIZADO**:
 
 ## Próximo responsable
 
-**Nicolás**
+**Diego**
 
 ## Módulo
 
 ```text
-RF04 — Análisis de histogramas
-RF05 — Detección de cambios
+RF06 — Identificación del comando
+RF07 — Validación de la acción
+RF08 — Ventana temporal posterior
+RF09 — Captura posterior al evento
 ```
 
 ## Punto exacto desde donde continúa
 
-El notebook ya dispone de:
+El módulo de Nicolás deja disponibles:
 
 ```text
-roi_normal
-roi_importante
-roi_fin
+coordenadas de las tres ROI
+histogramas normalizados
+umbral_cobertura = 0.40
+calcular_histograma_roi(...)
+obtener_roi_en_segundo(...)
+medir_distancia_roi(...)
+clasificar_estado_roi(...)
+detectar_estado_roi(...)
 ```
 
-y de las coordenadas de las tres regiones.
-
-El siguiente trabajo comienza directamente con el preprocesamiento de estas ROI y la comparación de histogramas.
-
-### Secuencia inicial prevista
+La salida principal por ROI es:
 
 ```text
-ROI
- ↓
-ESCALA DE GRISES
- ↓
-GAUSSIAN BLUR (kernel 5x5)
- ↓
-HISTOGRAMA
- ↓
-COMPARACIÓN
- ↓
-UMBRAL
- ↓
+(distancia, estado)
+```
+
+con `estado` igual a `LIBRE` o `CUBIERTA`.
+
+El siguiente trabajo comienza asociando cada ROI con su comando y validando la secuencia temporal de una acción real.
+
+### Secuencia prevista
+
+```text
 LIBRE / CUBIERTA
+      ↓
+IDENTIFICAR QUÉ ROI CAMBIÓ
+      ↓
+ASOCIAR COMANDO
+      ↓
+VALIDAR VISIBLE → CUBIERTA → VISIBLE
+      ↓
+ABRIR VENTANA POSTERIOR
+      ↓
+RECOLECTAR FRAMES CANDIDATOS
 ```
+
+> Para la ejecución continua, Diego deberá usar referencias limpias inicializadas de forma reproducible, en lugar de depender de los segundos manuales utilizados durante la calibración experimental de RF05.
 
 ---
 
@@ -912,9 +999,33 @@ LIBRE / CUBIERTA
 - ✅ Enlace real del video de Drive incorporado al plan.
 - ✅ Próximo responsable actualizado.
 
+### Próximo paso en ese momento
+
+- Nicolás inicia RF04 y RF05.
+
+## 11/08/2026 — RF04 y RF05 completados
+
+### Nicolás
+
+- ✅ ROI convertidas a escala de grises.
+- ✅ Gaussian Blur aplicado con kernel `5 × 5`.
+- ✅ Histogramas calculados y normalizados con norma L1.
+- ✅ Comparación mediante distancia de Bhattacharyya.
+- ✅ Pruebas libre vs. libre realizadas.
+- ✅ Pruebas de transición realizadas.
+- ✅ Coberturas claras validadas en las tres ROI.
+- ✅ Movimiento cercano probado sin activación incorrecta.
+- ✅ Umbral experimental `0.40` establecido.
+- ✅ Funciones reutilizables para medir y clasificar estados creadas.
+- ✅ Prueba automática final con `assert` superada.
+- ✅ Notebook preparado en versión limpia para GitHub.
+- ✅ README actualizado.
+- ✅ Plan de trabajo actualizado.
+- 🔁 Módulo preparado para revisión cruzada y Pull Request antes de integrar a `main`.
+
 ### Próximo paso
 
-- ⬜ Nicolás inicia RF04 y RF05.
+- Diego revisa la entrega de Nicolás y continúa con RF06–RF09 desde la salida `LIBRE / CUBIERTA`.
 
 ---
 
