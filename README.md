@@ -4,7 +4,7 @@
 
 Proyecto desarrollado como trabajo colaborativo para la **Diplomatura en Inteligencia Artificial**.
 
-> Última actualización de la organización del equipo: **10/08/2026**.
+> Última actualización: 11/08/2026.
 
 ---
 
@@ -97,7 +97,7 @@ El proyecto está desarrollado por cuatro integrantes:
 
 | Integrante | Requerimientos | Responsabilidad | Estado |
 |---|---|---|---|
-| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | RF01–RF03 ✅ / RF04–RF05 ⬜ |
+| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | RF01–RF05 ✅ |
 | Diego | RF06–RF09 | Comandos, validación, ventana temporal y captura posterior | ⬜ Pendiente |
 | Walter | RF10–RF12 + RF15 | Calidad, selección, guardado y procesamiento de imagen | ⬜ Pendiente |
 | Daniela | RF13–RF14 + RF16 | Clasificación, organización por temas y PDF | ⬜ Pendiente |
@@ -141,12 +141,42 @@ Se definieron, recortaron y validaron visualmente las tres ROI:
 - ⭐ Concepto importante;
 - 📌 Fin de tema.
 
-### Próxima etapa
+### RF04 — Análisis de histogramas
 
-**RF04 — Análisis de histogramas**  
-**RF05 — Detección de cambios**
+**✅ Realizado**
 
-Responsable: **Nicolás**.
+- conversión de las ROI a escala de grises;
+- aplicación de Gaussian Blur con kernel `5 × 5`;
+- cálculo de histogramas;
+- normalización L1;
+- comparación entre estados libres y cubiertos.
+
+### RF05 — Detección de cambios
+
+**✅ Realizado**
+
+- comparación mediante distancia de Bhattacharyya;
+- pruebas libre vs. libre;
+- pruebas de transición;
+- pruebas de cobertura clara;
+- prueba de movimiento cercano;
+- calibración experimental del umbral:
+
+```python
+umbral_cobertura = 0.40
+La salida del módulo permite clasificar cada ROI como:
+
+LIBRE
+o
+CUBIERTA
+
+El umbral 0.40 es experimental y podrá requerir calibración si cambian las condiciones de cámara, iluminación o pizarra.
+
+Próxima etapa
+
+RF06–RF09 — Identificación y validación de comandos
+
+Responsable: Diego.
 
 ---
 
@@ -251,8 +281,8 @@ A lo largo del proyecto se utilizarán, cuando aporten valor real:
 
 ## 🚧 Estado del proyecto
 
-**En desarrollo.**
+La base correspondiente a **RF01–RF05** está completada y validada.
 
-La base correspondiente a **RF01–RF03** ya está completada y validada.
+El módulo de Nicolás entrega a la siguiente etapa el estado de cada ROI como `LIBRE` o `CUBIERTA`.
 
-El desarrollo continúa con **RF04–RF05: histogramas y detección de cambios**.
+El desarrollo continúa con **RF06–RF09: identificación del comando, validación de la acción y captura posterior al evento**.
