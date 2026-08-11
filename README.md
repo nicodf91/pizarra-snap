@@ -164,19 +164,23 @@ Se definieron, recortaron y validaron visualmente las tres ROI:
 
 ```python
 umbral_cobertura = 0.40
+```
+
 La salida del módulo permite clasificar cada ROI como:
 
+```text
 LIBRE
 o
 CUBIERTA
+```
 
-El umbral 0.40 es experimental y podrá requerir calibración si cambian las condiciones de cámara, iluminación o pizarra.
+El umbral `0.40` es experimental y podrá requerir calibración si cambian las condiciones de cámara, iluminación o pizarra.
 
-Próxima etapa
+### Próxima etapa
 
-RF06–RF09 — Identificación y validación de comandos
+**RF06–RF09 — Identificación y validación de comandos**
 
-Responsable: Diego.
+Responsable: **Diego**.
 
 ---
 
