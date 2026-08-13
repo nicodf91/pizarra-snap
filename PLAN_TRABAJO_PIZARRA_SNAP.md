@@ -3,7 +3,7 @@
 **Proyecto:** Pizarra Snap  
 **Equipo actual:** Nicolás, Diego, Walter y Daniela  
 **Documento vivo:** este archivo debe actualizarse a medida que cada módulo se complete, pruebe e integre.  
-**Última actualización:** 11/08/2026
+**Última actualización:** 13/08/2026
 
 ---
 
@@ -68,7 +68,7 @@ Cada módulo deberá:
 | RF10 | Evaluación de calidad | Walter | ⬜ PENDIENTE |
 | RF11 | Selección del mejor frame | Walter | ⬜ PENDIENTE |
 | RF12 | Guardado de captura | Walter | ⬜ PENDIENTE |
-| RF13 | Clasificación de captura | Daniela | ⬜ PENDIENTE |
+| RF13 | Clasificación de captura | Daniela | ✅ REALIZADO |
 | RF14 | Organización por temas | Daniela | ⬜ PENDIENTE |
 | RF15 | Procesamiento de imagen | Walter | ⬜ PENDIENTE |
 | RF16 | Generación de reporte PDF | Daniela | ⬜ PENDIENTE |
@@ -623,7 +623,10 @@ Walter deberá entregar:
 
 ## Estado
 
-**⬜ PENDIENTE**
+```text
+RF13 ✅ REALIZADO
+RF14 ⬜ PENDIENTE
+RF16 ⬜ PENDIENTE
 
 ## Objetivo
 
@@ -632,6 +635,15 @@ Organizar las capturas según el significado del evento y generar el reporte fin
 ---
 
 ## RF13 — Clasificación de captura
+
+### Trabajo realizado
+
+- Clasificación de eventos en NORMAL, IMPORTANTE y FIN_DE_TEMA.
+- Registro de cada captura con ID, evento, categoría y momento.
+- Estructura preparada para asociar posteriormente el tema.
+- Pruebas automáticas con `assert`.
+- Validación de los tres tipos de captura y del evento no reconocido.
+- RF13 validado y subido a la rama `feature/rf13-rf14-rf16-daniela`.
 
 ### Tareas previstas
 
