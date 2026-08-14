@@ -1,9 +1,9 @@
-# Pizarra Snap — Plan de trabajo colaborativo
+﻿# Pizarra Snap — Plan de trabajo colaborativo
 
 **Proyecto:** Pizarra Snap  
 **Equipo actual:** Nicolás, Diego, Walter y Daniela  
 **Documento vivo:** este archivo debe actualizarse a medida que cada módulo se complete, pruebe e integre.  
-**Última actualización:** 13/08/2026
+**Última actualización:** 14/08/2026
 
 ---
 
@@ -69,9 +69,9 @@ Cada módulo deberá:
 | RF11 | Selección del mejor frame | Walter | ⬜ PENDIENTE |
 | RF12 | Guardado de captura | Walter | ⬜ PENDIENTE |
 | RF13 | Clasificación de captura | Daniela | ✅ REALIZADO |
-| RF14 | Organización por temas | Daniela | ⬜ PENDIENTE |
+| RF14 | Organización por temas | Daniela |  ✅ REALIZADO |
 | RF15 | Procesamiento de imagen | Walter | ⬜ PENDIENTE |
-| RF16 | Generación de reporte PDF | Daniela | ⬜ PENDIENTE |
+| RF16 | Generación de reporte PDF | Daniela |  ✅ REALIZADO |
 
 ---
 
@@ -625,8 +625,9 @@ Walter deberá entregar:
 
 ```text
 RF13 ✅ REALIZADO
-RF14 ⬜ PENDIENTE
-RF16 ⬜ PENDIENTE
+RF14 ✅ REALIZADO
+RF16 ✅ REALIZADO
+```
 
 ## Objetivo
 
@@ -640,38 +641,36 @@ Organizar las capturas según el significado del evento y generar el reporte fin
 
 - Clasificación de eventos en NORMAL, IMPORTANTE y FIN_DE_TEMA.
 - Registro de cada captura con ID, evento, categoría y momento.
-- Estructura preparada para asociar posteriormente el tema.
+- **Corrección de contrato de datos** (detectada al iniciar RF16): se agregó el campo `imagen_path` al registro, fijo en `None` hasta que exista RF12 (Walter). No se expuso como parámetro configurable, para evitar que algún módulo lo complete antes de tiempo.
 - Pruebas automáticas con `assert`.
 - Validación de los tres tipos de captura y del evento no reconocido.
 - RF13 validado y subido a la rama `feature/rf13-rf14-rf16-daniela`.
 
-### Tareas previstas
+### Contrato de datos actual
 
-Clasificar cada captura como:
-
-```text
-NORMAL
-IMPORTANTE
-FIN_DE_TEMA
+```python
+{
+    "id": ...,
+    "evento": ...,
+    "categoria": ...,
+    "momento": ...,
+    "tema": ...,
+    "imagen_path": ...   # None hasta que RF12 exista
+}
 ```
-
-Mantener una estructura ordenada con los datos necesarios.
 
 ---
 
 ## RF14 — Organización por temas
 
-### Tareas previstas
+### Trabajo realizado
 
-- Mantener un tema activo.
-- Agregar capturas normales al tema correspondiente.
-- Destacar las capturas IMPORTANTES.
-- Cuando aparezca FIN_DE_TEMA:
-  - incluir la captura final;
-  - cerrar el bloque;
-  - preparar un nuevo tema.
+- `asignar_tema(registros)`: asigna número de tema secuencial; el contador incrementa recién después de procesar un `FIN_DE_TEMA`.
+- `organizar_por_temas(registros)`: agrupa en una lista de temas, cada uno con capturas normales, importante y cierre.
+- Pruebas automáticas con `assert`, validando la asignación y agrupación correcta.
+- RF14 validado y subido a la rama `feature/rf13-rf14-rf16-daniela`.
 
-### Resultado esperado
+### Resultado obtenido
 
 Estructura lógica de la clase:
 
@@ -690,17 +689,15 @@ Tema 2
 
 ## RF16 — Generación del reporte PDF
 
-### Tareas previstas
+### Trabajo realizado
 
-Generar un PDF que incluya:
-
-- identificación de Pizarra Snap;
-- fecha o datos de la clase si están disponibles;
-- separación visual por temas;
-- capturas normales;
-- conceptos importantes destacados;
-- cierre de cada tema;
-- imágenes procesadas.
+- Identidad visual V1 definida: logo (símbolo de encuadre + destello, combinado con el wordmark "Pizarra Snap"), paleta (`#FAFAFA`, `#157A6E`, `#F5A623`, `#1A1A1A`, `#6B7280`) y tipografía (Helvetica estándar de ReportLab).
+- PDF generado con **ReportLab**: portada con logo protagonista, encabezado/pie con logo chico en páginas interiores, contenido organizado por tema.
+- **Layout iterado tras revisión:** primera versión con grilla de 2 columnas descartada por reducir demasiado el tamaño de las imágenes. Versión final con imagen protagonista (una captura por fila, ocupando el ancho útil de la página, proporción calculada dinámicamente).
+- Tratamiento visual diferencial: `NORMAL` con borde gris sutil, `IMPORTANTE` con borde ámbar, `FIN_DE_TEMA` con borde teal (cierre del bloque).
+- Placeholder ("Imagen pendiente — RF12") mientras `imagen_path` sea `None`, listo para reemplazarse automáticamente cuando RF12 exista.
+- Validado con capturas reales extraídas del video (frames completos en los segundos ya validados como libres por RF05) y con prueba automática (`assert`): generación sin errores, PDF válido, al menos 2 páginas, estructura de datos consistente con RF14.
+- RF16 validado y subido a la rama `feature/rf13-rf14-rf16-daniela`.
 
 ### Extensión futura
 
@@ -710,13 +707,31 @@ Si el tiempo y el alcance del trabajo lo permiten, se podrá evaluar posteriorme
 - modelo de visión;
 - resumen mediante IA;
 - conceptos principales;
-- preguntas de repaso.
+- preguntas de repaso;
+- detección de diferencias entre capturas consecutivas (ver observación en sección 8bis).
 
 Estas funciones son complementarias y no deben impedir completar primero el flujo principal.
 
-### Resultado esperado
+### Resultado obtenido
 
-Archivo PDF final organizado y legible.
+Archivo PDF final organizado y legible, con identidad visual propia de Pizarra Snap.
+
+---
+
+# 8bis. Observación de diseño — Efecto acumulativo de las capturas
+
+## Contexto
+
+Al validar RF16 con imágenes reales se detectó que las capturas sucesivas de un mismo tema muestran contenido acumulado: si el docente no borra la pizarra entre una captura y la siguiente, cada imagen nueva incluye todo lo escrito anteriormente, no solo lo agregado desde la última captura.
+
+## Por qué ocurre
+
+No es un error de ningún RF. La cámara fotografía el estado completo de la pizarra en cada momento; ningún módulo actual (RF01-RF16) compara o resta contenido entre capturas sucesivas. Se confirmó que ni RF10-RF12 (selección del mejor frame completo) ni RF15 (recorte del marco de la pizarra respecto de su entorno) resuelven esto — ninguno aísla "solo lo nuevo" de una captura.
+
+## Recomendación
+
+- **Corto plazo (uso del sistema):** el docente debería borrar la pizarra al cerrar cada tema (evento FIN_DE_TEMA), antes de continuar con el siguiente.
+- **Largo plazo (extensión futura):** una funcionalidad de detección de diferencias entre capturas consecutivas (similar a la comparación de histogramas ya usada en RF05, aplicada a la pizarra completa) podría aislar el contenido nuevo. Fuera del alcance del MVP actual.
 
 ---
 
@@ -1038,6 +1053,24 @@ RECOLECTAR FRAMES CANDIDATOS
 ### Próximo paso
 
 - Diego revisa la entrega de Nicolás y continúa con RF06–RF09 desde la salida `LIBRE / CUBIERTA`.
+
+## 13-14/08/2026 — RF13 corregido, RF14 y RF16 completados
+
+### Daniela
+
+- ✅ RF13: corrección de contrato de datos — se agregó el campo `imagen_path` (fijo en `None` hasta que exista RF12).
+- ✅ RF13: se corrigió la ubicación del notebook — el trabajo se había subido como archivo nuevo en la raíz del repo en vez de actualizar `notebooks/PizarraSnap.ipynb`. Consolidado en un único archivo.
+- ✅ RF14: `asignar_tema` y `organizar_por_temas` implementados y validados con `assert`.
+- ✅ RF16: identidad visual V1 definida (logo, paleta, tipografía).
+- ✅ RF16: layout iterado — de grilla de 2 columnas a imagen protagonista en columna única, tras revisión de legibilidad.
+- ✅ RF16: `generar_pdf_clase` completo, validado con capturas reales del video y prueba automática.
+- 🟡 Observación de diseño detectada y documentada: efecto acumulativo de capturas cuando no se borra la pizarra entre temas (ver sección 8bis).
+- ✅ Pull Request creado hacia `main`, con revisión solicitada a Nicolás.
+
+### Próximo paso
+
+- Nicolás revisa el módulo de Daniela (RF13/RF14/RF16), según la tabla de revisión cruzada.
+- Pendiente: integración real con RF12 (Walter) para reemplazar la asignación manual de `imagen_path` por la automática.
 
 ---
 
