@@ -3,7 +3,7 @@
 **Proyecto:** Pizarra Snap  
 **Equipo actual:** Nicolás, Diego, Walter y Daniela  
 **Documento vivo:** este archivo debe actualizarse a medida que cada módulo se complete, pruebe e integre.  
-**Última actualización:** 11/08/2026
+**Última actualización:** 15/08/2026
 
 ---
 
@@ -61,10 +61,10 @@ Cada módulo deberá:
 | RF03 | Regiones de interés (ROI) | Nicolás | ✅ REALIZADO |
 | RF04 | Análisis de histogramas | Nicolás | ✅ REALIZADO |
 | RF05 | Detección de cambios | Nicolás | ✅ REALIZADO |
-| RF06 | Identificación del comando | Diego | ⬜ PENDIENTE |
-| RF07 | Validación de la acción | Diego | ⬜ PENDIENTE |
-| RF08 | Ventana temporal posterior | Diego | ⬜ PENDIENTE |
-| RF09 | Captura posterior al evento | Diego | ⬜ PENDIENTE |
+| RF06 | Identificación del comando | Diego | ✅ REALIZADO |
+| RF07 | Validación de la acción | Diego | ✅ REALIZADO |
+| RF08 | Ventana temporal posterior | Diego | ✅ REALIZADO |
+| RF09 | Captura posterior al evento | Diego | ✅ REALIZADO |
 | RF10 | Evaluación de calidad | Walter | ⬜ PENDIENTE |
 | RF11 | Selección del mejor frame | Walter | ⬜ PENDIENTE |
 | RF12 | Guardado de captura | Walter | ⬜ PENDIENTE |
@@ -392,7 +392,12 @@ Quedan disponibles las coordenadas de las tres ROI y las funciones necesarias pa
 
 ## Estado
 
-**⬜ PENDIENTE**
+```text
+RF06 ✅ REALIZADO
+RF07 ✅ REALIZADO
+RF08 ✅ REALIZADO
+RF09 ✅ REALIZADO
+```
 
 ## Objetivo general del módulo
 
@@ -507,6 +512,49 @@ frames_candidatos
 tipo_evento
 momento_del_evento
 ```
+
+### Resultado obtenido (RF06–RF09)
+
+- Las referencias LIBRES de las tres ROI se calculan automáticamente al
+  arrancar (`segundo_inicio = 0.5`), en vez de depender de segundos
+  elegidos a mano, como pedía la nota de integración de RF05.
+- El video se recorre **de corrido** (frame a frame, sin `video.set()`
+  repetido), porque saltar a segundos sueltos resultó demasiado lento
+  sobre el video completo.
+- RF06/RF07 exigen que la transición LIBRE→CUBIERTA sea de **una sola ROI
+  a la vez** y que la cobertura dure entre `0.5s` y `4s` para confirmarse
+  como comando — esto descarta el ruido detectado durante las pruebas: el
+  profesor tapa las tres ROI juntas al acercarse a escribir en la pizarra
+  (quedan apiladas en el mismo borde), lo cual no es un comando intencional.
+- RF08 calcula la ventana posterior (`ventana_frames = int(2.0 * fps)`)
+  usando el fps real del video (28.84), no un valor fijo de 30.
+- RF09 entrega `capturas`: una lista de diccionarios, uno por comando
+  confirmado, cada uno con `tipo_evento`, `momento_del_evento` y
+  `frames_candidatos` (los frames posteriores al evento, sin procesar).
+
+### Prueba automática final
+
+Se utilizó `assert` para comprobar que:
+
+- se detectan exactamente los 3 comandos reales del video de prueba, en
+  el orden esperado (`CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE`,
+  `FIN_DE_TEMA`);
+- cada captura tiene la ventana completa de frames (`ventana_frames`).
+
+La prueba final terminó correctamente con el mensaje:
+
+```text
+✅ RF06-RF09 validado correctamente.
+Los tres comandos se detectaron, filtraron y su ventana posterior se recolectó completa.
+```
+
+### Limitación conocida
+
+Cada `frames_candidatos` guarda frames completos en memoria (resolución
+completa, sin comprimir) — con 3 capturas de ~57 frames cada una esto ya
+ocupa varios cientos de MB de RAM. Si el video de prueba real fuera más
+largo o hubiera más eventos, convendría revisar esto (por ejemplo,
+guardar menos frames por ventana o reducir resolución) antes de RF10.
 
 ---
 
@@ -914,59 +962,53 @@ Antes de integrar un módulo:
 
 ## Próximo responsable
 
-**Diego**
+**Walter**
 
 ## Módulo
 
 ```text
-RF06 — Identificación del comando
-RF07 — Validación de la acción
-RF08 — Ventana temporal posterior
-RF09 — Captura posterior al evento
+RF10 — Evaluación de calidad
+RF11 — Selección del mejor frame
+RF12 — Guardado de captura
+RF15 — Procesamiento de imagen
 ```
 
 ## Punto exacto desde donde continúa
 
-El módulo de Nicolás deja disponibles:
+El módulo de Diego deja disponible la lista `capturas`, con un elemento por
+comando confirmado:
 
 ```text
-coordenadas de las tres ROI
-histogramas normalizados
-umbral_cobertura = 0.40
-calcular_histograma_roi(...)
-obtener_roi_en_segundo(...)
-medir_distancia_roi(...)
-clasificar_estado_roi(...)
-detectar_estado_roi(...)
+capturas = [
+    {
+        "tipo_evento": "CAPTURA_NORMAL" | "CONCEPTO_IMPORTANTE" | "FIN_DE_TEMA",
+        "momento_del_evento": <segundo en que se confirmó el comando>,
+        "frames_candidatos": [<frames posteriores al evento, sin procesar>],
+    },
+    ...
+]
 ```
 
-La salida principal por ROI es:
-
-```text
-(distancia, estado)
-```
-
-con `estado` igual a `LIBRE` o `CUBIERTA`.
-
-El siguiente trabajo comienza asociando cada ROI con su comando y validando la secuencia temporal de una acción real.
+Cada `frames_candidatos` tiene `ventana_frames` frames (~2 segundos,
+calculados con el fps real del video).
 
 ### Secuencia prevista
 
 ```text
-LIBRE / CUBIERTA
+frames_candidatos (por captura)
       ↓
-IDENTIFICAR QUÉ ROI CAMBIÓ
+EVALUAR CALIDAD DE CADA FRAME
       ↓
-ASOCIAR COMANDO
+SELECCIONAR EL MEJOR
       ↓
-VALIDAR VISIBLE → CUBIERTA → VISIBLE
+PROCESAR IMAGEN (si aporta valor real)
       ↓
-ABRIR VENTANA POSTERIOR
-      ↓
-RECOLECTAR FRAMES CANDIDATOS
+GUARDAR CAPTURA + METADATOS
 ```
 
-> Para la ejecución continua, Diego deberá usar referencias limpias inicializadas de forma reproducible, en lugar de depender de los segundos manuales utilizados durante la calibración experimental de RF05.
+> Ver la sección "Limitación conocida" del módulo de Diego (arriba): los
+> frames candidatos están sin comprimir y a resolución completa — vale la
+> pena tenerlo en cuenta antes de iterar sobre las 3 capturas × ~57 frames.
 
 ---
 
@@ -1026,6 +1068,33 @@ RECOLECTAR FRAMES CANDIDATOS
 ### Próximo paso
 
 - Diego revisa la entrega de Nicolás y continúa con RF06–RF09 desde la salida `LIBRE / CUBIERTA`.
+
+## 15/08/2026 — RF06 a RF09 completados
+
+### Diego
+
+- ✅ RF06 — Identificación del comando: detecta qué ROI cambió y la asocia
+  con su evento (CAPTURA_NORMAL, CONCEPTO_IMPORTANTE, FIN_DE_TEMA).
+- ✅ RF07 — Validación de la acción: exige que la ROI se cubra en soledad
+  (ninguna otra ROI cubierta al mismo tiempo) y que la cobertura dure
+  entre 0.5s y 4s, para descartar el ruido de que el profesor pase cerca
+  del pizarrón mientras escribe.
+- ✅ RF08 — Ventana temporal posterior: se abre apenas se confirma el
+  evento, con duración calculada en frames a partir del fps real del
+  video (no se asume 30 fps fijo).
+- ✅ RF09 — Captura posterior al evento: se recolectan los frames de esa
+  ventana y se entregan agrupados en `capturas` (`tipo_evento`,
+  `momento_del_evento`, `frames_candidatos`).
+- ✅ Prueba de aceptación con `assert` superada: se detectan los 3
+  comandos reales del video (~21s, ~36s, ~49s), sin falsos positivos,
+  cada ventana con la cantidad esperada de frames.
+- 🔁 Módulo preparado para revisión cruzada (Walter) y Pull Request antes
+  de integrar a `main`.
+
+### Próximo paso
+
+- Walter revisa la entrega de Diego y continúa con RF10–RF12 y RF15 a
+  partir de `capturas`.
 
 ---
 
