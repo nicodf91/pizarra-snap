@@ -68,10 +68,10 @@ Cada módulo deberá:
 | RF10 | Evaluación de calidad | Walter | 🔁 EN REVISIÓN |
 | RF11 | Selección del mejor frame | Walter | 🔁 EN REVISIÓN |
 | RF12 | Guardado de captura | Walter | 🔁 EN REVISIÓN |
-| RF13 | Clasificación de captura | Daniela | ⬜ PENDIENTE |
-| RF14 | Organización por temas | Daniela | ⬜ PENDIENTE |
+| RF13 | Clasificación de captura | Daniela | 🔁 EN REVISIÓN |
+| RF14 | Organización por temas | Daniela | 🔁 EN REVISIÓN |
 | RF15 | Procesamiento de imagen | Walter | 🔁 EN REVISIÓN |
-| RF16 | Generación de reporte PDF | Daniela | ⬜ PENDIENTE |
+| RF16 | Generación de reporte PDF | Daniela | 🔁 EN REVISIÓN |
 
 ---
 
@@ -673,72 +673,139 @@ El módulo queda en revisión hasta la auditoría cruzada de la rama de recupera
 
 ## Estado
 
-**⬜ PENDIENTE**
+**🔁 EN REVISIÓN**
 
 ## Objetivo
 
-Organizar las capturas según el significado del evento y generar el reporte final.
+Adaptar la salida auditada de Walter, organizar cada captura exactamente una vez y generar el reporte final sin reabrir el video ni reconstruir eventos.
+
+La recuperación se implementó sobre `integration/auditoria-pizarra-snap`. La rama original de Daniela se utilizó únicamente como referencia; no se hizo merge ni cherry-pick.
+
+## Recuperación semántica
+
+Se recuperaron:
+
+- el mapping visual `CAPTURA_NORMAL → NORMAL`, `CONCEPTO_IMPORTANTE → IMPORTANTE` y `FIN_DE_TEMA → FIN_DE_TEMA`;
+- la organización lineal por temas;
+- ReportLab, la portada, la jerarquía de tarjetas y la diferenciación visual de categorías;
+- la conservación de relación de aspecto y los renglones opcionales para notas.
+
+Se adaptaron:
+
+- RF13 para consumir directamente `resultados_walter` y producir registros livianos;
+- la selección de imagen, priorizando una procesada válida y usando la original como fallback;
+- RF14 para preservar el orden global en una única lista `capturas` por tema;
+- RF16 para recibir un path de salida explícito, dibujar fondos en canvas, validar el PDF y devolver un `Path`.
+
+Se descartaron:
+
+- `capturar_frame_completo` y los segundos hardcodeados;
+- la recreación manual de eventos y rutas;
+- la estructura separada `normales` / `importante` / `fin_de_tema`;
+- la definición duplicada y obsoleta de `generar_pdf_clase`;
+- la dependencia de `files.download`, fondos PNG relativos y outputs antiguos.
+
+## Arquitectura implementada
+
+```text
+resultados_walter
+        ↓
+adaptar_para_reporte()
+        ↓
+resultados_reporte
+        ↓
+agrupar_por_temas()
+        ↓
+temas
+        ↓
+generar_pdf_clase()
+        ↓
+Path del PDF validado
+```
 
 ---
 
 ## RF13 — Clasificación de captura
 
-### Tareas previstas
+### Contrato y comportamiento
 
-Clasificar cada captura como:
+`adaptar_para_reporte(resultados_walter)` conserva identidad, evento y momento, deriva una categoría y selecciona una ruta persistida. No copia `mejor_frame`, `captura_procesada` ni las evaluaciones completas.
 
-```text
-NORMAL
-IMPORTANTE
-FIN_DE_TEMA
+```python
+{
+    "numero_captura": int,
+    "tipo_evento": str,
+    "categoria": str,
+    "momento_del_evento": float,
+    "imagen_path": str | None,
+    "fuente_imagen": "procesada" | "original" | "sin_imagen",
+}
 ```
 
-Mantener una estructura ordenada con los datos necesarios.
+La selección de imagen usa este orden:
+
+```text
+captura_procesada_path válida
+        ↓
+captura_path válida
+        ↓
+None + advertencia
+```
+
+Un evento desconocido produce `ValueError`; nunca se pierde silenciosamente.
 
 ---
 
 ## RF14 — Organización por temas
 
-### Tareas previstas
+### Estructura final
 
-- Mantener un tema activo.
-- Agregar capturas normales al tema correspondiente.
-- Destacar las capturas IMPORTANTES.
-- Cuando aparezca FIN_DE_TEMA:
-  - incluir la captura final;
-  - cerrar el bloque;
-  - preparar un nuevo tema.
-
-### Resultado esperado
-
-Estructura lógica de la clase:
-
-```text
-Tema 1
-├── Captura normal
-├── Captura normal
-├── Concepto importante
-└── Fin de tema
-
-Tema 2
-├── ...
+```python
+[
+    {
+        "numero_tema": 1,
+        "capturas": [...],
+        "cerrado": True,
+    },
+]
 ```
+
+`agrupar_por_temas(resultados_reporte)` preserva el orden de entrada y no muta la lista recibida. Cada `FIN_DE_TEMA` se incluye como última captura de su tema, marca `cerrado=True` y hace que el siguiente evento inicie un tema nuevo. Un último tema sin cierre se conserva con `cerrado=False`.
+
+La función rechaza identificadores duplicados, eventos desconocidos y categorías incoherentes. Además valida que la cantidad total de capturas de salida coincida con la entrada.
 
 ---
 
 ## RF16 — Generación del reporte PDF
 
-### Tareas previstas
+### Implementación
 
-Generar un PDF que incluya:
+`generar_pdf_clase(temas, salida_pdf, datos_clase=None)` utiliza ReportLab y Pillow. La función:
 
-- identificación de Pizarra Snap;
-- fecha o datos de la clase si están disponibles;
-- separación visual por temas;
-- capturas normales;
-- conceptos importantes destacados;
-- cierre de cada tema;
-- imágenes procesadas.
+- recibe un destino explícito y crea su directorio padre;
+- genera portada, encabezado, pie, títulos y tarjetas A4;
+- usa texto, color y bordes —no emojis— para diferenciar categorías;
+- mantiene relación de aspecto con límites de ancho y alto;
+- muestra un placeholder si falta la imagen o el archivo no puede abrirse;
+- dibuja fondos directamente en canvas, sin archivos auxiliares;
+- verifica existencia y tamaño del PDF;
+- devuelve un `Path` absoluto;
+- no depende de Colab ni llama a `files.download`.
+
+Los datos de clase son opcionales y no se inventan valores ausentes.
+
+### Pruebas realizadas
+
+- RF13: mapping, identidad, tiempo, selección procesada, fallback original, ausencia de imagen, serialización y rechazo de eventos desconocidos.
+- RF14: lista vacía, secuencia nominal, último tema abierto, primer cierre, cierres consecutivos, cierre final, orden, unicidad, ausencia de pérdida y no mutación.
+- RF16: imágenes controladas, path procesado, fallback, archivo corrupto, placeholder, tema abierto, existencia, tamaño, apertura con `PdfReader` y páginas.
+- Inspección visual del PDF sintético renderizado: portada, márgenes, encabezados, pies, proporciones, categorías, saltos y ausencia de páginas blancas o solapamientos.
+
+### Limitación vigente
+
+La prueba real end-to-end no pudo reproducirse localmente porque el video se carga mediante el selector interactivo de Colab y no existe una copia en el repositorio ni en los adjuntos disponibles. El notebook incluye una celda que ejecuta y valida el flujo real cuando `resultados_walter` está presente en la sesión.
+
+RF13, RF14 y RF16 permanecen **EN REVISIÓN** hasta ejecutar esa prueba con el video real y completar la auditoría cruzada.
 
 ### Extensión futura
 
