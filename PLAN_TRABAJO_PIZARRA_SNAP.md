@@ -3,7 +3,7 @@
 **Proyecto:** Pizarra Snap  
 **Equipo actual:** Nicolás, Diego, Walter y Daniela  
 **Documento vivo:** este archivo debe actualizarse a medida que cada módulo se complete, pruebe e integre.  
-**Última actualización:** 15/08/2026
+**Última actualización:** 19/08/2026
 
 ---
 
@@ -65,12 +65,12 @@ Cada módulo deberá:
 | RF07 | Validación de la acción | Diego | ✅ REALIZADO |
 | RF08 | Ventana temporal posterior | Diego | ✅ REALIZADO |
 | RF09 | Captura posterior al evento | Diego | ✅ REALIZADO |
-| RF10 | Evaluación de calidad | Walter | ⬜ PENDIENTE |
-| RF11 | Selección del mejor frame | Walter | ⬜ PENDIENTE |
-| RF12 | Guardado de captura | Walter | ⬜ PENDIENTE |
+| RF10 | Evaluación de calidad | Walter | 🔁 EN REVISIÓN |
+| RF11 | Selección del mejor frame | Walter | 🔁 EN REVISIÓN |
+| RF12 | Guardado de captura | Walter | 🔁 EN REVISIÓN |
 | RF13 | Clasificación de captura | Daniela | ⬜ PENDIENTE |
 | RF14 | Organización por temas | Daniela | ⬜ PENDIENTE |
-| RF15 | Procesamiento de imagen | Walter | ⬜ PENDIENTE |
+| RF15 | Procesamiento de imagen | Walter | 🔁 EN REVISIÓN |
 | RF16 | Generación de reporte PDF | Daniela | ⬜ PENDIENTE |
 
 ---
@@ -562,108 +562,110 @@ guardar menos frames por ventana o reducir resolución) antes de RF10.
 
 ## Estado
 
-**⬜ PENDIENTE**
+**🔁 EN REVISIÓN**
 
 ## Objetivo
 
 Elegir automáticamente la mejor captura posterior al evento, guardarla y mejorar la imagen de la pizarra cuando una transformación aporte valor real.
 
+### Recuperación semántica del trabajo previo
+
+Se auditó el notebook de la rama `seleccionFrame` sin unir su historia Git. De Walter se recuperaron:
+
+- la varianza del Laplaciano como medida de nitidez;
+- la desviación estándar de intensidades como medida de contraste;
+- el guardado mediante `cv2.imwrite` y nombres descriptivos.
+
+Se adaptaron esas ideas al contrato actual de Diego. La implementación ya no vuelve a posicionar ni leer el video y no utiliza la cobertura de la ROI como objetivo de selección: consume directamente los `frames_candidatos` posteriores al evento.
+
+Se descartaron la selección del frame más cubierto, las comparaciones por igualdad exacta de métricas flotantes, las demostraciones con segundos escritos a mano y las dos definiciones duplicadas de `guardar_frame`. Ese enfoque podía favorecer la presencia de la mano y reconstruía una etapa que RF06–RF09 ya resolvieron. La rama auditada tampoco contenía una implementación efectiva de RF15.
+
 ---
 
 ## RF10 — Evaluación de calidad
 
-### Tareas previstas
+Cada candidato produce estas métricas:
 
-Evaluar criterios como:
+- `nitidez`: varianza del Laplaciano sobre una versión gris reducida al 50%;
+- `contraste`: desviación estándar de intensidades;
+- `movimiento`: diferencia absoluta media respecto del frame anterior;
+- `estabilidad`: movimiento normalizado en sentido inverso dentro del evento;
+- `score`: combinación relativa de 55% nitidez, 30% estabilidad y 15% contraste.
 
-- nitidez;
-- estabilidad;
-- movimiento;
-- contraste.
-
-### Kernel y convolución
-
-Utilizar el concepto de kernel donde aporte valor real.
-
-Ejemplos previstos:
-
-- Laplaciano para estimar nitidez;
-- varianza del Laplaciano;
-- comparación de movimiento entre frames.
-
-### Resultado esperado
-
-Asignar un puntaje de calidad a cada frame candidato.
+El primer candidato se compara con su vecino para no premiarlo artificialmente con movimiento cero. Solamente se conservan métricas escalares durante la evaluación.
 
 ---
 
 ## RF11 — Selección del mejor frame
 
-### Tareas previstas
+Se elige exactamente un ganador por evento con el mayor `score`. Los desempates favorecen mayor nitidez, menor movimiento y, finalmente, el candidato más temprano para obtener un resultado determinista.
 
-- Comparar los puntajes.
-- Seleccionar automáticamente el candidato de mayor calidad.
-- Verificar que el resultado no contenga innecesariamente:
-  - mano;
-  - borrador;
-  - movimiento excesivo;
-  - desenfoque.
-
-### Resultado esperado
-
-Un único `mejor_frame`.
+La comparación temporal penaliza indirectamente la mano o el borrador en movimiento sin introducir un detector de personas. En el video real, los tres ganadores se inspeccionaron visualmente y muestran la pizarra completa, legible y sin mano/borrador.
 
 ---
 
 ## RF12 — Guardado de captura
 
-### Tareas previstas
+La captura original se guarda en PNG, se valida el resultado de `cv2.imwrite` y se conserva una ruta absoluta en `captura_path`.
 
-- Guardar la imagen elegida.
-- Crear nombres de archivo ordenados.
-- Asociarla con:
-  - número de captura;
-  - tipo de evento;
-  - tema actual;
-  - momento de captura si corresponde.
+Los nombres tienen este formato ordenado:
 
-### Resultado esperado
+```text
+captura_001_captura_normal_<momento_ms>ms.png
+```
 
-Archivo de imagen persistente y metadatos necesarios para el módulo de organización.
+En Colab se usa `/content/capturas_pizarra_snap`; en ejecución local, el directorio temporal del sistema. Así las imágenes generadas no contaminan el repositorio.
 
 ---
 
 ## RF15 — Procesamiento de imagen
 
-### Tareas previstas
+Se evalúa una copia en escala de grises con CLAHE (`clipLimit=2.0`, grilla `8 × 8`). Solo se conserva si aumenta el contraste al menos 5% y mantiene al menos 90% de la nitidez medida. La versión original nunca se reemplaza.
 
-Evaluar y aplicar solamente cuando aporte una mejora real:
+En el video real ninguna de las tres capturas superó ambos umbrales; por eso `captura_procesada`, `captura_procesada_path` y `procesamiento_aplicado` quedaron en `None`. La rama sí se validó con una imagen sintética de bajo contraste, donde se generó, guardó y volvió a leer una versión procesada de un solo canal.
 
-- recorte de pizarra;
-- escala de grises;
-- mejora de contraste;
-- reducción de ruido;
-- threshold;
-- Canny;
-- contornos;
-- corrección de perspectiva;
-- operaciones morfológicas;
-- erosión;
-- dilatación;
-- kernels `3 × 3` o `5 × 5`.
+No se aplicaron recorte, threshold, Canny, morfología ni corrección de perspectiva porque no existe una geometría validada de la pizarra y no demostraron mejorar estas capturas.
 
-### Criterio
+### Contrato de entrada real
 
-No se incorporarán operaciones solamente para demostrar que fueron vistas en clase. Cada transformación deberá tener una justificación relacionada con la calidad final de la pizarra.
+```python
+{
+    "tipo_evento": str,
+    "momento_del_evento": float,
+    "frames_candidatos": list[np.ndarray],
+}
+```
 
-### Entrega de Walter a Daniela
+### Contrato de salida real
 
-Walter deberá entregar:
+```python
+{
+    "numero_captura": int,
+    "tipo_evento": str,
+    "momento_del_evento": float,
+    "indice_mejor_frame": int,
+    "mejor_frame": np.ndarray,
+    "metricas_mejor_frame": dict,
+    "evaluaciones_calidad": list[dict],
+    "captura_path": str,
+    "captura_procesada": np.ndarray | None,
+    "captura_procesada_path": str | None,
+    "procesamiento_aplicado": str | None,
+    "evaluacion_procesamiento": dict,
+}
+```
 
-- captura elegida;
-- captura procesada, si corresponde;
-- categoría del evento;
-- metadatos necesarios para organizar el reporte.
+Después de guardar cada resultado se vacía la lista `frames_candidatos` correspondiente, conservando solamente el ganador y la eventual versión procesada. Esto reduce la presión de memoria sin refactorizar RF09.
+
+### Pruebas ejecutadas
+
+- casos sintéticos nítido/desenfocado y estable/en movimiento;
+- guardado, existencia y lectura válida con OpenCV;
+- generación opcional RF15 sobre bajo contraste y preservación de la original;
+- ejecución real completa: `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE`, `FIN_DE_TEMA`, en ese orden, con 57 candidatos por evento;
+- validación estructural y compilación de todas las celdas del notebook.
+
+El módulo queda en revisión hasta la auditoría cruzada de la rama de recuperación.
 
 ---
 
@@ -960,55 +962,9 @@ Antes de integrar un módulo:
 
 # 16. Próximo paso del proyecto
 
-## Próximo responsable
+La rama `recovery/walter-rf10-rf12-rf15` debe ser auditada en modo solo lectura antes de autorizar cualquier integración. RF13, RF14 y RF16 no forman parte de esta recuperación y no se conectarán hasta que el contrato de salida documentado en la sección 7 sea revisado.
 
-**Walter**
-
-## Módulo
-
-```text
-RF10 — Evaluación de calidad
-RF11 — Selección del mejor frame
-RF12 — Guardado de captura
-RF15 — Procesamiento de imagen
-```
-
-## Punto exacto desde donde continúa
-
-El módulo de Diego deja disponible la lista `capturas`, con un elemento por
-comando confirmado:
-
-```text
-capturas = [
-    {
-        "tipo_evento": "CAPTURA_NORMAL" | "CONCEPTO_IMPORTANTE" | "FIN_DE_TEMA",
-        "momento_del_evento": <segundo en que se confirmó el comando>,
-        "frames_candidatos": [<frames posteriores al evento, sin procesar>],
-    },
-    ...
-]
-```
-
-Cada `frames_candidatos` tiene `ventana_frames` frames (~2 segundos,
-calculados con el fps real del video).
-
-### Secuencia prevista
-
-```text
-frames_candidatos (por captura)
-      ↓
-EVALUAR CALIDAD DE CADA FRAME
-      ↓
-SELECCIONAR EL MEJOR
-      ↓
-PROCESAR IMAGEN (si aporta valor real)
-      ↓
-GUARDAR CAPTURA + METADATOS
-```
-
-> Ver la sección "Limitación conocida" del módulo de Diego (arriba): los
-> frames candidatos están sin comprimir y a resolución completa — vale la
-> pena tenerlo en cuenta antes de iterar sobre las 3 capturas × ~57 frames.
+No corresponde abrir ni mergear un Pull Request en esta etapa.
 
 ---
 
@@ -1095,6 +1051,20 @@ GUARDAR CAPTURA + METADATOS
 
 - Walter revisa la entrega de Diego y continúa con RF10–RF12 y RF15 a
   partir de `capturas`.
+
+## 19/08/2026 — Recuperación de RF10, RF11, RF12 y RF15
+
+### Walter
+
+- ✅ Trabajo previo auditado semánticamente sin merge, rebase ni cherry-pick.
+- ✅ RF10 adaptado a los `frames_candidatos` reales de Diego.
+- ✅ RF11 selecciona un ganador explicable por evento.
+- ✅ RF12 guarda la original con nombre ordenado y ruta persistente.
+- ✅ RF15 conserva una mejora CLAHE solamente cuando supera criterios medibles.
+- ✅ Pruebas sintéticas, filesystem, validez del notebook y recorrido real ejecutados.
+- ✅ Regresión real RF06–RF09: tres eventos en orden y 57 candidatos por evento.
+- ✅ Ganadores reales inspeccionados visualmente sin mano/borrador.
+- 🔁 Rama de recuperación preparada para auditoría externa; no integrada.
 
 ---
 
