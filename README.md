@@ -104,7 +104,11 @@ El proyecto está desarrollado por cuatro integrantes:
 | Walter | RF10–RF12 + RF15 | Calidad, selección, guardado y procesamiento de imagen | ✅ Validado |
 | Daniela | RF13–RF14 + RF16 | Clasificación, organización por temas y PDF | ✅ Validado |
 
-Los RF01–RF16 están implementados y validados en `integration/auditoria-pizarra-snap`. Todavía no fueron incorporados a `main`.
+Estado técnico consolidado: RF01–RF16 implementados y validados de punta a punta.
+
+Versión consolidada validada: `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
+
+La promoción de esta versión a la rama principal se realiza mediante un proceso Git controlado.
 
 Las limitaciones conocidas no son errores de funcionamiento:
 
@@ -187,11 +191,11 @@ El umbral `0.40` es experimental y podrá requerir calibración si cambian las c
 
 ### Pipeline consolidado
 
-La rama de integración ejecuta el flujo completo desde el video hasta el PDF. La validación end-to-end con el video oficial detectó, en orden, `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE` y `FIN_DE_TEMA`; Walter seleccionó una captura válida por evento y Daniela generó un tema cerrado y un PDF final de cuatro páginas.
+La versión consolidada ejecuta el flujo completo desde el video hasta el PDF. La validación end-to-end con el video oficial detectó, en orden, `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE` y `FIN_DE_TEMA`; Walter seleccionó una captura válida por evento y Daniela generó un tema cerrado y un PDF final de tres páginas con su diseño original restaurado.
 
-### Siguiente etapa
+### Promoción controlada
 
-Completar el hardening y la auditoría final pre-main. La incorporación a `main` se realizará únicamente después de esa revisión.
+La promoción de la versión consolidada a la rama principal requiere verificaciones Git de relación y fast-forward. Este documento describe el estado técnico validado sin depender de la rama activa.
 
 ---
 
@@ -296,8 +300,8 @@ A lo largo del proyecto se utilizarán, cuando aporten valor real:
 
 ## 🚧 Estado del proyecto
 
-Los RF01–RF16 están implementados y validados en la rama acumulativa `integration/auditoria-pizarra-snap`.
+Los RF01–RF16 están implementados y validados en la versión consolidada `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
 
-El resultado consolidado conserva las responsabilidades funcionales de Nicolás, Diego, Walter y Daniela. Durante la integración se adaptaron únicamente los contratos necesarios para conectar los módulos, sin sustituir la esencia del trabajo de cada integrante.
+El resultado consolidado conserva las responsabilidades funcionales de Nicolás, Diego, Walter y Daniela. Se adaptaron únicamente los contratos necesarios para conectar los módulos, sin sustituir la esencia del trabajo de cada integrante, y se preservaron los comentarios y Markdown compatibles del equipo.
 
-El siguiente paso es completar la auditoría final pre-main; este estado todavía no implica integración en `main`.
+La publicación de esta versión en la rama principal se gestiona mediante un proceso Git controlado; el estado técnico documentado no depende de la rama que esté activa.

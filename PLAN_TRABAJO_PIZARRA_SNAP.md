@@ -670,7 +670,7 @@ Después de guardar cada resultado se vacía la lista `frames_candidatos` corres
 - ejecución real completa: `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE`, `FIN_DE_TEMA`, en ese orden, con 57 candidatos por evento;
 - validación estructural y compilación de todas las celdas del notebook.
 
-El módulo fue validado dentro del pipeline consolidado y su recovery quedó incorporada a `integration/auditoria-pizarra-snap`, todavía sin modificar `main`.
+El módulo forma parte de la versión consolidada validada `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
 
 ---
 
@@ -1038,11 +1038,13 @@ Antes de integrar un módulo:
 
 ---
 
-# 16. Próximo paso del proyecto
+# 16. Estado técnico consolidado
 
-Los RF01–RF16 están conectados y validados en `integration/auditoria-pizarra-snap`. El siguiente paso es completar el hardening y una auditoría final pre-main sobre una rama separada.
+Los RF01–RF16 están conectados y validados de punta a punta en la versión consolidada `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
 
-La integración en `main` sólo podrá evaluarse después de comprobar nuevamente sintaxis, Run All con el video real, archivos generados y PDF final. Esta planificación no implica que los cambios ya estén incorporados a `main`.
+La validación incluye sintaxis, Run All con el video real, archivos generados, PDF final con el diseño original de Daniela y preservación de los comentarios y Markdown compatibles del equipo.
+
+La promoción de la versión validada a la rama principal se realiza mediante un proceso Git controlado. Este plan documenta el estado técnico consolidado sin depender de la rama activa.
 
 ---
 
@@ -1142,7 +1144,7 @@ La integración en `main` sólo podrá evaluarse después de comprobar nuevament
 - ✅ Pruebas sintéticas, filesystem, validez del notebook y recorrido real ejecutados.
 - ✅ Regresión real RF06–RF09: tres eventos en orden y 57 candidatos por evento.
 - ✅ Ganadores reales inspeccionados visualmente sin mano/borrador.
-- ✅ Recovery auditada e incorporada a `integration/auditoria-pizarra-snap`; todavía no integrada a `main`.
+- ✅ Recovery auditada e incorporada a la versión consolidada validada en esa etapa.
 
 ### Daniela
 
@@ -1150,7 +1152,7 @@ La integración en `main` sólo podrá evaluarse después de comprobar nuevament
 - ✅ RF14 conserva orden, unicidad y cierre de tema.
 - ✅ RF16 genera un PDF final válido de cuatro páginas.
 - ✅ Pipeline real verificado con los tres eventos y 57 candidatos por evento.
-- ✅ Recovery auditada e incorporada a `integration/auditoria-pizarra-snap`; todavía no integrada a `main`.
+- ✅ Recovery auditada e incorporada a la versión consolidada validada en esa etapa.
 
 ---
 
