@@ -3,7 +3,7 @@
 **Proyecto:** Pizarra Snap  
 **Equipo actual:** Nicolás, Diego, Walter y Daniela  
 **Documento vivo:** este archivo debe actualizarse a medida que cada módulo se complete, pruebe e integre.  
-**Última actualización:** 19/08/2026
+**Última actualización:** 20/08/2026
 
 ---
 
@@ -44,6 +44,8 @@ Cada módulo deberá:
 
 | Estado | Significado |
 |---|---|
+| ✅ VALIDADO | Implementado y verificado mediante pruebas de integración |
+| 🟡 VALIDADO CON LIMITACIÓN | Funciona para el alcance validado y conserva una limitación documentada |
 | ✅ REALIZADO | Código implementado y validado por el responsable |
 | 🟡 EN PROGRESO | El integrante está trabajando en el módulo |
 | ⬜ PENDIENTE | Todavía no comenzó |
@@ -56,22 +58,22 @@ Cada módulo deberá:
 
 | RF | Requerimiento | Responsable | Estado |
 |---|---|---|---|
-| RF01 | Lectura de video | Nicolás | ✅ REALIZADO |
-| RF02 | Procesamiento de frames | Nicolás | ✅ REALIZADO |
-| RF03 | Regiones de interés (ROI) | Nicolás | ✅ REALIZADO |
-| RF04 | Análisis de histogramas | Nicolás | ✅ REALIZADO |
-| RF05 | Detección de cambios | Nicolás | ✅ REALIZADO |
-| RF06 | Identificación del comando | Diego | ✅ REALIZADO |
-| RF07 | Validación de la acción | Diego | ✅ REALIZADO |
-| RF08 | Ventana temporal posterior | Diego | ✅ REALIZADO |
-| RF09 | Captura posterior al evento | Diego | ✅ REALIZADO |
-| RF10 | Evaluación de calidad | Walter | 🔁 EN REVISIÓN |
-| RF11 | Selección del mejor frame | Walter | 🔁 EN REVISIÓN |
-| RF12 | Guardado de captura | Walter | 🔁 EN REVISIÓN |
-| RF13 | Clasificación de captura | Daniela | 🔁 EN REVISIÓN |
-| RF14 | Organización por temas | Daniela | 🔁 EN REVISIÓN |
-| RF15 | Procesamiento de imagen | Walter | 🔁 EN REVISIÓN |
-| RF16 | Generación de reporte PDF | Daniela | 🔁 EN REVISIÓN |
+| RF01 | Lectura de video | Nicolás | ✅ VALIDADO |
+| RF02 | Procesamiento de frames | Nicolás | ✅ VALIDADO |
+| RF03 | Regiones de interés (ROI) | Nicolás | ✅ VALIDADO |
+| RF04 | Análisis de histogramas | Nicolás | ✅ VALIDADO |
+| RF05 | Detección de cambios | Nicolás | 🟡 VALIDADO CON LIMITACIÓN |
+| RF06 | Identificación del comando | Diego | ✅ VALIDADO |
+| RF07 | Validación de la acción | Diego | ✅ VALIDADO |
+| RF08 | Ventana temporal posterior | Diego | ✅ VALIDADO |
+| RF09 | Captura posterior al evento | Diego | 🟡 VALIDADO CON LIMITACIÓN |
+| RF10 | Evaluación de calidad | Walter | ✅ VALIDADO |
+| RF11 | Selección del mejor frame | Walter | ✅ VALIDADO |
+| RF12 | Guardado de captura | Walter | ✅ VALIDADO |
+| RF13 | Clasificación de captura | Daniela | ✅ VALIDADO |
+| RF14 | Organización por temas | Daniela | ✅ VALIDADO |
+| RF15 | Procesamiento de imagen | Walter | ✅ VALIDADO |
+| RF16 | Generación de reporte PDF | Daniela | ✅ VALIDADO |
 
 ---
 
@@ -80,11 +82,11 @@ Cada módulo deberá:
 ## Estado
 
 ```text
-RF01 ✅ REALIZADO
-RF02 ✅ REALIZADO
-RF03 ✅ REALIZADO
-RF04 ✅ REALIZADO
-RF05 ✅ REALIZADO
+RF01 ✅ VALIDADO
+RF02 ✅ VALIDADO
+RF03 ✅ VALIDADO
+RF04 ✅ VALIDADO
+RF05 🟡 VALIDADO CON LIMITACIÓN
 ```
 
 ## Objetivo general del módulo
@@ -393,10 +395,10 @@ Quedan disponibles las coordenadas de las tres ROI y las funciones necesarias pa
 ## Estado
 
 ```text
-RF06 ✅ REALIZADO
-RF07 ✅ REALIZADO
-RF08 ✅ REALIZADO
-RF09 ✅ REALIZADO
+RF06 ✅ VALIDADO
+RF07 ✅ VALIDADO
+RF08 ✅ VALIDADO
+RF09 🟡 VALIDADO CON LIMITACIÓN
 ```
 
 ## Objetivo general del módulo
@@ -550,11 +552,14 @@ Los tres comandos se detectaron, filtraron y su ventana posterior se recolectó 
 
 ### Limitación conocida
 
-Cada `frames_candidatos` guarda frames completos en memoria (resolución
-completa, sin comprimir) — con 3 capturas de ~57 frames cada una esto ya
-ocupa varios cientos de MB de RAM. Si el video de prueba real fuera más
-largo o hubiera más eventos, convendría revisar esto (por ejemplo,
-guardar menos frames por ventana o reducir resolución) antes de RF10.
+Cada `frames_candidatos` guarda frames completos en memoria, con resolución completa y sin comprimir. Para el video validado:
+
+```text
+1920 × 1080 × 3 uint8 = 6.220.800 bytes por frame
+171 candidatos simultáneos = 1.063.756.800 bytes ≈ 1.014 MiB
+```
+
+Esta estimación no incluye el overhead de Python, OpenCV, listas ni métricas. El video actual procesa correctamente y Walter vacía cada lista de candidatos después de seleccionar y guardar el ganador. No es bloqueante para la entrega, pero queda como deuda técnica para videos más largos, resoluciones mayores o una cantidad superior de eventos.
 
 ---
 
@@ -562,7 +567,7 @@ guardar menos frames por ventana o reducir resolución) antes de RF10.
 
 ## Estado
 
-**🔁 EN REVISIÓN**
+**✅ VALIDADO**
 
 ## Objetivo
 
@@ -665,7 +670,7 @@ Después de guardar cada resultado se vacía la lista `frames_candidatos` corres
 - ejecución real completa: `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE`, `FIN_DE_TEMA`, en ese orden, con 57 candidatos por evento;
 - validación estructural y compilación de todas las celdas del notebook.
 
-El módulo queda en revisión hasta la auditoría cruzada de la rama de recuperación.
+El módulo fue validado dentro del pipeline consolidado y su recovery quedó incorporada a `integration/auditoria-pizarra-snap`, todavía sin modificar `main`.
 
 ---
 
@@ -673,7 +678,7 @@ El módulo queda en revisión hasta la auditoría cruzada de la rama de recupera
 
 ## Estado
 
-**🔁 EN REVISIÓN**
+**✅ VALIDADO**
 
 ## Objetivo
 
@@ -801,11 +806,17 @@ Los datos de clase son opcionales y no se inventan valores ausentes.
 - RF16: imágenes controladas, path procesado, fallback, archivo corrupto, placeholder, tema abierto, existencia, tamaño, apertura con `PdfReader` y páginas.
 - Inspección visual del PDF sintético renderizado: portada, márgenes, encabezados, pies, proporciones, categorías, saltos y ausencia de páginas blancas o solapamientos.
 
-### Limitación vigente
+### Validación end-to-end consolidada
 
-La prueba real end-to-end no pudo reproducirse localmente porque el video se carga mediante el selector interactivo de Colab y no existe una copia en el repositorio ni en los adjuntos disponibles. El notebook incluye una celda que ejecuta y valida el flujo real cuando `resultados_walter` está presente en la sesión.
+La prueba real se ejecutó desde un proceso limpio sobre `integration/auditoria-pizarra-snap`, utilizando el video oficial fuera del repositorio. El resultado verificado fue:
 
-RF13, RF14 y RF16 permanecen **EN REVISIÓN** hasta ejecutar esa prueba con el video real y completar la auditoría cruzada.
+```text
+CAPTURA_NORMAL       21,876 s   57 candidatos
+CONCEPTO_IMPORTANTE  37,512 s   57 candidatos
+FIN_DE_TEMA          50,548 s   57 candidatos
+```
+
+Walter produjo tres capturas originales válidas. RF13 generó tres `resultados_reporte`, RF14 conservó las tres capturas en un único tema cerrado y RF16 generó un PDF final válido de cuatro páginas.
 
 ### Extensión futura
 
@@ -1029,9 +1040,9 @@ Antes de integrar un módulo:
 
 # 16. Próximo paso del proyecto
 
-La rama `recovery/walter-rf10-rf12-rf15` debe ser auditada en modo solo lectura antes de autorizar cualquier integración. RF13, RF14 y RF16 no forman parte de esta recuperación y no se conectarán hasta que el contrato de salida documentado en la sección 7 sea revisado.
+Los RF01–RF16 están conectados y validados en `integration/auditoria-pizarra-snap`. El siguiente paso es completar el hardening y una auditoría final pre-main sobre una rama separada.
 
-No corresponde abrir ni mergear un Pull Request en esta etapa.
+La integración en `main` sólo podrá evaluarse después de comprobar nuevamente sintaxis, Run All con el video real, archivos generados y PDF final. Esta planificación no implica que los cambios ya estén incorporados a `main`.
 
 ---
 
@@ -1131,7 +1142,15 @@ No corresponde abrir ni mergear un Pull Request en esta etapa.
 - ✅ Pruebas sintéticas, filesystem, validez del notebook y recorrido real ejecutados.
 - ✅ Regresión real RF06–RF09: tres eventos en orden y 57 candidatos por evento.
 - ✅ Ganadores reales inspeccionados visualmente sin mano/borrador.
-- 🔁 Rama de recuperación preparada para auditoría externa; no integrada.
+- ✅ Recovery auditada e incorporada a `integration/auditoria-pizarra-snap`; todavía no integrada a `main`.
+
+### Daniela
+
+- ✅ RF13 consume directamente los tres resultados de Walter.
+- ✅ RF14 conserva orden, unicidad y cierre de tema.
+- ✅ RF16 genera un PDF final válido de cuatro páginas.
+- ✅ Pipeline real verificado con los tres eventos y 57 candidatos por evento.
+- ✅ Recovery auditada e incorporada a `integration/auditoria-pizarra-snap`; todavía no integrada a `main`.
 
 ---
 

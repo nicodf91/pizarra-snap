@@ -4,7 +4,7 @@
 
 Proyecto desarrollado como trabajo colaborativo para la **Diplomatura en Inteligencia Artificial**.
 
-> Última actualización: 11/08/2026.
+> Última actualización: 20/08/2026.
 
 ---
 
@@ -70,10 +70,12 @@ El proyecto utiliza principalmente herramientas trabajadas durante la Diplomatur
 - **OpenCV**
 - **NumPy**
 - **Matplotlib**
+- **ReportLab**
+- **Pillow**
+- **pypdf**
 
 En etapas posteriores se podrá evaluar incorporar:
 
-- ReportLab o FPDF;
 - OCR;
 - modelos de visión;
 - modelos de lenguaje para generación de resúmenes.
@@ -97,10 +99,17 @@ El proyecto está desarrollado por cuatro integrantes:
 
 | Integrante | Requerimientos | Responsabilidad | Estado |
 |---|---|---|---|
-| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | RF01–RF05 ✅ |
-| Diego | RF06–RF09 | Comandos, validación, ventana temporal y captura posterior | ⬜ Pendiente |
-| Walter | RF10–RF12 + RF15 | Calidad, selección, guardado y procesamiento de imagen | ⬜ Pendiente |
-| Daniela | RF13–RF14 + RF16 | Clasificación, organización por temas y PDF | ⬜ Pendiente |
+| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | RF01–RF04 ✅; RF05 🟡 |
+| Diego | RF06–RF09 | Comandos, validación, ventana temporal y captura posterior | RF06–RF08 ✅; RF09 🟡 |
+| Walter | RF10–RF12 + RF15 | Calidad, selección, guardado y procesamiento de imagen | ✅ Validado |
+| Daniela | RF13–RF14 + RF16 | Clasificación, organización por temas y PDF | ✅ Validado |
+
+Los RF01–RF16 están implementados y validados en `integration/auditoria-pizarra-snap`. Todavía no fueron incorporados a `main`.
+
+Las limitaciones conocidas no son errores de funcionamiento:
+
+- RF05 utiliza un umbral calibrado para la cámara, iluminación y video de prueba actuales;
+- RF09 mantiene temporalmente frames completos en memoria y deberá optimizarse si aumentan la resolución, la duración o la cantidad de eventos.
 
 La planificación detallada, las entradas y salidas de cada módulo y el registro de avances se encuentran en:
 
@@ -176,11 +185,13 @@ CUBIERTA
 
 El umbral `0.40` es experimental y podrá requerir calibración si cambian las condiciones de cámara, iluminación o pizarra.
 
-### Próxima etapa
+### Pipeline consolidado
 
-**RF06–RF09 — Identificación y validación de comandos**
+La rama de integración ejecuta el flujo completo desde el video hasta el PDF. La validación end-to-end con el video oficial detectó, en orden, `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE` y `FIN_DE_TEMA`; Walter seleccionó una captura válida por evento y Daniela generó un tema cerrado y un PDF final de cuatro páginas.
 
-Responsable: **Diego**.
+### Siguiente etapa
+
+Completar el hardening y la auditoría final pre-main. La incorporación a `main` se realizará únicamente después de esa revisión.
 
 ---
 
@@ -285,8 +296,8 @@ A lo largo del proyecto se utilizarán, cuando aporten valor real:
 
 ## 🚧 Estado del proyecto
 
-La base correspondiente a **RF01–RF05** está completada y validada.
+Los RF01–RF16 están implementados y validados en la rama acumulativa `integration/auditoria-pizarra-snap`.
 
-El módulo de Nicolás entrega a la siguiente etapa el estado de cada ROI como `LIBRE` o `CUBIERTA`.
+El resultado consolidado conserva las responsabilidades funcionales de Nicolás, Diego, Walter y Daniela. Durante la integración se adaptaron únicamente los contratos necesarios para conectar los módulos, sin sustituir la esencia del trabajo de cada integrante.
 
-El desarrollo continúa con **RF06–RF09: identificación del comando, validación de la acción y captura posterior al evento**.
+El siguiente paso es completar la auditoría final pre-main; este estado todavía no implica integración en `main`.
