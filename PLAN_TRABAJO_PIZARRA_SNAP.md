@@ -788,23 +788,23 @@ La función rechaza identificadores duplicados, eventos desconocidos y categorí
 `generar_pdf_clase(temas, salida_pdf, datos_clase=None)` utiliza ReportLab y Pillow. La función:
 
 - recibe un destino explícito y crea su directorio padre;
-- genera portada, encabezado, pie, títulos y tarjetas A4;
-- usa texto, color y bordes —no emojis— para diferenciar categorías;
+- restaura la identidad visual original diseñada por Daniela: fondos suaves, cintas de marca, logo, wordmark, portada, encabezado, pie y tarjetas A4;
+- conserva la paleta teal/ámbar, los bordes por categoría y los renglones de notas de NORMAL e IMPORTANTE;
 - mantiene relación de aspecto con límites de ancho y alto;
 - muestra un placeholder si falta la imagen o el archivo no puede abrirse;
-- dibuja fondos directamente en canvas, sin archivos auxiliares;
+- genera los fondos de Daniela en un directorio temporal, sin archivos auxiliares persistentes;
 - verifica existencia y tamaño del PDF;
 - devuelve un `Path` absoluto;
 - no depende de Colab ni llama a `files.download`.
 
-Los datos de clase son opcionales y no se inventan valores ausentes.
+La portada conserva los datos originales de Daniela, con las dos actualizaciones acordadas: institución `UTN` y materia `DIPLOMATURA EN IA`. `datos_clase` permite reemplazar explícitamente esos valores cuando corresponda.
 
 ### Pruebas realizadas
 
 - RF13: mapping, identidad, tiempo, selección procesada, fallback original, ausencia de imagen, serialización y rechazo de eventos desconocidos.
 - RF14: lista vacía, secuencia nominal, último tema abierto, primer cierre, cierres consecutivos, cierre final, orden, unicidad, ausencia de pérdida y no mutación.
 - RF16: imágenes controladas, path procesado, fallback, archivo corrupto, placeholder, tema abierto, existencia, tamaño, apertura con `PdfReader` y páginas.
-- Inspección visual del PDF sintético renderizado: portada, márgenes, encabezados, pies, proporciones, categorías, saltos y ausencia de páginas blancas o solapamientos.
+- Comparación visual renderizada contra el RF16 original de Daniela: páginas internas idénticas y portada modificada únicamente en institución y materia.
 
 ### Validación end-to-end consolidada
 
@@ -816,7 +816,7 @@ CONCEPTO_IMPORTANTE  37,512 s   57 candidatos
 FIN_DE_TEMA          50,548 s   57 candidatos
 ```
 
-Walter produjo tres capturas originales válidas. RF13 generó tres `resultados_reporte`, RF14 conservó las tres capturas en un único tema cerrado y RF16 generó un PDF final válido de cuatro páginas.
+Walter produjo tres capturas originales válidas. RF13 generó tres `resultados_reporte`, RF14 conservó las tres capturas en un único tema cerrado y RF16 generó un PDF final válido de tres páginas con el diseño original de Daniela restaurado.
 
 ### Extensión futura
 
