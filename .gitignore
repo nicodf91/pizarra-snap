@@ -1,8 +1,35 @@
-# Evito subir videos pesados al repositorio.
-*.mp4
+# Python
+__pycache__/
+*.py[cod]
 
-# Evito archivos temporales de Jupyter/Colab.
+# Jupyter
 .ipynb_checkpoints/
 
-# Evito archivos temporales de Python.
-__pycache__/
+# Entornos virtuales
+.venv/
+venv/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Video oficial de prueba fuera de Git
+/proyecto_pizzarasnap.mp4
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Herramientas de desarrollo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Temporales
+*.log
+*.tmp
+*.bak
+*~
