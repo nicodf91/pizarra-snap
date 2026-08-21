@@ -1,307 +1,224 @@
-# 📸 Pizarra Snap
+# Pizarra Snap
 
-**Sistema inteligente de captura de pizarras mediante visión por computadora.**
+Sistema de visión por computadora que permite registrar contenido de una pizarra mediante tres comandos visuales. El docente activa cada comando cubriendo brevemente una zona de la pizarra; el sistema detecta la acción, elige una captura de buena calidad y genera un reporte PDF organizado por temas.
 
-Proyecto desarrollado como trabajo colaborativo para la **Diplomatura en Inteligencia Artificial**.
+Proyecto colaborativo desarrollado para la **Diplomatura en Inteligencia Artificial**.
 
-> Última actualización: 20/08/2026.
+## Estado actual
 
----
+Los requerimientos RF01–RF16 están implementados y conectados de punta a punta en `main`.
 
-## 🎯 Objetivo
+- Rama canónica: `main`
+- Versión consolidada: `5900fa5a7d982e408259760617fde1f613426f79`
+- Notebook oficial: [`notebooks/PizarraSnap.ipynb`](notebooks/PizarraSnap.ipynb)
+- Entorno soportado actualmente: Google Colab
 
-Pizarra Snap busca permitir que un docente capture el contenido de una pizarra sin utilizar:
+La versión consolidada se incorporó a `main` mediante fast-forward, sin reescribir la historia de los aportes. El notebook actual fue descargado desde `main`, ejecutado con **Run All** en Google Colab y validado manualmente de principio a fin con el video oficial.
 
-- teclado;
-- mouse;
-- botones electrónicos;
-- comandos de voz.
+### Resultado de la corrida de validación con el video oficial
 
-La interacción se realiza mediante tres zonas visuales ubicadas sobre la pizarra:
+| Resultado | Valor observado |
+|---|---:|
+| Eventos detectados | 3 |
+| Orden | `CAPTURA_NORMAL` → `CONCEPTO_IMPORTANTE` → `FIN_DE_TEMA` |
+| Frames candidatos por evento | 57 |
+| Capturas seleccionadas | 3 |
+| Temas generados | 1 tema cerrado |
+| Páginas del PDF | 3 |
+| Descarga del PDF | Automática en Google Colab |
 
-- 📸 **Captura normal**
-- ⭐ **Concepto importante**
-- 📌 **Fin de tema**
+Estos valores describen **la corrida oficial validada**. No son constantes del algoritmo: pueden cambiar con otro video, FPS, duración, cantidad de eventos o contenido de la clase.
 
-El docente activa una acción cubriendo brevemente la zona correspondiente.
-
-El sistema detecta el cambio mediante técnicas de visión por computadora y, una vez que la zona vuelve a quedar visible, analiza una breve secuencia de frames posteriores para seleccionar automáticamente la imagen de mejor calidad.
-
----
-
-## 🧠 Flujo general
+El PDF conservó el diseño visual original de Daniela. La portada validada utiliza:
 
 ```text
-CÁMARA
-   ↓
+INSTITUCIÓN: UTN
+MATERIA: DIPLOMATURA EN IA
+```
+
+## Qué problema resuelve
+
+Pizarra Snap permite que un docente solicite capturas sin usar teclado, mouse, botones electrónicos ni comandos de voz. La interacción se realiza mediante tres zonas visuales:
+
+- **Captura normal:** registra contenido general.
+- **Concepto importante:** marca una captura con tratamiento destacado en el reporte.
+- **Fin de tema:** incluye la captura actual y cierra el tema en el PDF.
+
+Cuando una zona vuelve a quedar libre, el sistema conserva una ventana breve de frames posteriores. Esto evita elegir inmediatamente una imagen que todavía pueda mostrar la mano o el borrador en movimiento.
+
+## Cómo funciona
+
+```mermaid
+flowchart TD
+    A[Video cargado en Colab] --> B[Nicolás · RF01–RF05<br/>video, frames, ROI, histogramas y cambio visual]
+    B --> C[Diego · RF06–RF09<br/>eventos, validación y frames candidatos]
+    C --> D[Walter · RF10–RF12 y RF15<br/>calidad, selección, guardado y mejora opcional]
+    D --> E[Daniela · RF13–RF14 y RF16<br/>categorías, temas y reporte]
+    E --> F[PDF final]
+    F --> G[Descarga automática en Colab]
+```
+
+### Pipeline técnico
+
+```text
 VIDEO
-   ↓
-FRAMES
-   ↓
+  ↓
+FRAMES BGR
+  ↓
 REGIONES DE INTERÉS (ROI)
-   ↓
-HISTOGRAMAS
-   ↓
-DETECCIÓN DEL CAMBIO
-   ↓
-IDENTIFICACIÓN Y VALIDACIÓN DEL COMANDO
-   ↓
-VENTANA DE CAPTURA POSTERIOR
-   ↓
+  ↓
+HISTOGRAMAS NORMALIZADOS
+  ↓
+ESTADO LIBRE / CUBIERTA
+  ↓
+EVENTO VALIDADO
+  ↓
+VENTANA TEMPORAL POSTERIOR
+  ↓
+FRAMES CANDIDATOS
+  ↓
 EVALUACIÓN DE CALIDAD
-   ↓
-MEJOR FRAME
-   ↓
-GUARDADO Y PROCESAMIENTO
-   ↓
-CLASIFICACIÓN Y ORGANIZACIÓN
-   ↓
-REPORTE PDF
+  ↓
+MEJOR FRAME + PNG
+  ↓
+PROCESAMIENTO CLAHE OPCIONAL
+  ↓
+CLASIFICACIÓN Y TEMAS
+  ↓
+PDF
 ```
 
----
+Un **frame candidato** es una imagen del video almacenada durante la ventana posterior al evento. Se conservan varias opciones para que el módulo de Walter pueda seleccionar posteriormente la de mejor calidad.
 
-## 🛠️ Stack tecnológico
+Los contratos detallados entre etapas están documentados en [`PLAN_TRABAJO_PIZARRA_SNAP.md`](PLAN_TRABAJO_PIZARRA_SNAP.md).
 
-El proyecto utiliza principalmente herramientas trabajadas durante la Diplomatura:
+## Responsabilidades del equipo
 
-- **Python**
-- **Google Colab / Jupyter Notebook**
-- **OpenCV**
-- **NumPy**
-- **Matplotlib**
-- **ReportLab**
-- **Pillow**
-- **pypdf**
-
-En etapas posteriores se podrá evaluar incorporar:
-
-- OCR;
-- modelos de visión;
-- modelos de lenguaje para generación de resúmenes.
-
-Estas extensiones son complementarias y no deben impedir completar primero el flujo principal.
-
----
-
-## 👥 Equipo actual
-
-El proyecto está desarrollado por cuatro integrantes:
-
-- **Nicolás**
-- **Diego**
-- **Walter**
-- **Daniela**
-
----
-
-## 📋 Distribución actual del trabajo
-
-| Integrante | Requerimientos | Responsabilidad | Estado |
+| Integrante | Requerimientos | Responsabilidad funcional | Estado |
 |---|---|---|---|
-| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | RF01–RF04 ✅; RF05 🟡 |
-| Diego | RF06–RF09 | Comandos, validación, ventana temporal y captura posterior | RF06–RF08 ✅; RF09 🟡 |
-| Walter | RF10–RF12 + RF15 | Calidad, selección, guardado y procesamiento de imagen | ✅ Validado |
-| Daniela | RF13–RF14 + RF16 | Clasificación, organización por temas y PDF | ✅ Validado |
+| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | Validado; RF05 conserva una limitación conocida |
+| Diego | RF06–RF09 | Eventos, validación, ventana temporal y frames candidatos | Validado; RF09 conserva una limitación de memoria |
+| Walter | RF10–RF12 y RF15 | Calidad, selección, guardado y procesamiento opcional | Validado |
+| Daniela | RF13–RF14 y RF16 | Clasificación, temas y generación del PDF | Validado |
 
-Estado técnico consolidado: RF01–RF16 implementados y validados de punta a punta.
+El **diseño visual original del PDF es de Daniela**. La integración preservó su portada, paleta, logo, wordmark, fondos, tarjetas, jerarquía visual y renglones para notas, adaptándolos al contrato consolidado del pipeline.
 
-Versión consolidada validada: `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
+La responsabilidad funcional no debe confundirse con la autoría Git de los commits de recuperación. La historia completa se explica en el plan de trabajo.
 
-La promoción de esta versión a la rama principal se realiza mediante un proceso Git controlado.
+## Ejecutar en Google Colab
 
-Las limitaciones conocidas no son errores de funcionamiento:
+El notebook canónico está diseñado actualmente para Google Colab.
 
-- RF05 utiliza un umbral calibrado para la cámara, iluminación y video de prueba actuales;
-- RF09 mantiene temporalmente frames completos en memoria y deberá optimizarse si aumentan la resolución, la duración o la cantidad de eventos.
+1. Desde la rama `main`, abrir o descargar [`notebooks/PizarraSnap.ipynb`](notebooks/PizarraSnap.ipynb).
+2. Descargar el video oficial [`proyecto_pizzarasnap.mp4`](https://drive.google.com/file/d/1Vcixn88RZXEH3cLLovZQJBfYXKoIKlMb/view?usp=drive_link).
+3. Abrir el notebook en Google Colab.
+4. Seleccionar **Runtime → Run All**.
+5. Cuando aparezca el selector, elegir exactamente `proyecto_pizzarasnap.mp4`.
+6. Esperar a que finalicen RF01–RF16.
+7. La última celda iniciará la descarga del PDF cuando `pdf_path_real` exista.
 
-La planificación detallada, las entradas y salidas de cada módulo y el registro de avances se encuentran en:
+No se garantiza un tiempo exacto de ejecución. La duración depende del entorno de Colab, el video y los recursos disponibles.
 
-➡️ [PLAN_TRABAJO_PIZARRA_SNAP.md](PLAN_TRABAJO_PIZARRA_SNAP.md)
+El manual operativo, las rutas temporales y la resolución de problemas se encuentran en [`notebooks/README.md`](notebooks/README.md).
 
----
+## Entradas y salidas
 
-## ✅ Estado actual
-
-### RF01 — Lectura de video
-
-**✅ Realizado**
-
-- carga y apertura del video con OpenCV;
-- obtención de FPS;
-- resolución;
-- cantidad de frames;
-- duración.
-
-### RF02 — Procesamiento de frames
-
-**✅ Realizado**
-
-- lectura de frames;
-- representación mediante arrays de NumPy;
-- análisis de `shape`;
-- análisis de píxeles;
-- canales BGR;
-- visualización mediante Matplotlib.
-
-### RF03 — Regiones de interés
-
-**✅ Realizado**
-
-Se definieron, recortaron y validaron visualmente las tres ROI:
-
-- 📸 Captura normal;
-- ⭐ Concepto importante;
-- 📌 Fin de tema.
-
-### RF04 — Análisis de histogramas
-
-**✅ Realizado**
-
-- conversión de las ROI a escala de grises;
-- aplicación de Gaussian Blur con kernel `5 × 5`;
-- cálculo de histogramas;
-- normalización L1;
-- comparación entre estados libres y cubiertos.
-
-### RF05 — Detección de cambios
-
-**✅ Realizado**
-
-- comparación mediante distancia de Bhattacharyya;
-- pruebas libre vs. libre;
-- pruebas de transición;
-- pruebas de cobertura clara;
-- prueba de movimiento cercano;
-- calibración experimental del umbral:
-
-```python
-umbral_cobertura = 0.40
-```
-
-La salida del módulo permite clasificar cada ROI como:
-
-```text
-LIBRE
-o
-CUBIERTA
-```
-
-El umbral `0.40` es experimental y podrá requerir calibración si cambian las condiciones de cámara, iluminación o pizarra.
-
-### Pipeline consolidado
-
-La versión consolidada ejecuta el flujo completo desde el video hasta el PDF. La validación end-to-end con el video oficial detectó, en orden, `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE` y `FIN_DE_TEMA`; Walter seleccionó una captura válida por evento y Daniela generó un tema cerrado y un PDF final de tres páginas con su diseño original restaurado.
-
-### Promoción controlada
-
-La promoción de la versión consolidada a la rama principal requiere verificaciones Git de relación y fast-forward. Este documento describe el estado técnico validado sin depender de la rama activa.
-
----
-
-## 📓 Notebook principal
-
-El notebook oficial del proyecto se encuentra en:
-
-➡️ [notebooks/PizarraSnap.ipynb](notebooks/PizarraSnap.ipynb)
-
-El desarrollo se realiza inicialmente en **Google Colab**.
-
----
-
-## 🎥 Video de prueba
-
-Archivo utilizado:
+### Entrada
 
 ```text
 proyecto_pizzarasnap.mp4
 ```
 
-El video no se almacena directamente en GitHub debido a su tamaño. Se comparte mediante **Google Drive**:
+El video no se almacena en Git porque es un archivo de prueba pesado. El enlace de Google Drive debe conservar permisos de acceso adecuados para el equipo.
 
-➡️ [Ver o descargar video de prueba](https://drive.google.com/file/d/1Vcixn88RZXEH3cLLovZQJBfYXKoIKlMb/view?usp=drive_link)
+### Salidas intermedias
 
-> El archivo de Drive debe mantenerse con permisos adecuados para los integrantes del equipo.
+- `capturas`: eventos confirmados con sus frames candidatos.
+- `resultados_walter`: ganador, métricas y rutas persistidas por evento.
+- `resultados_reporte`: registros livianos para clasificación y reporte.
+- `temas`: capturas agrupadas en orden y con estado de cierre.
+- Capturas PNG originales y, cuando aporta valor, versiones procesadas.
 
----
+### Salida final
 
-## 📁 Estructura actual del repositorio
+```text
+reporte_pizarra_snap_real.pdf
+```
+
+El PDF se genera en almacenamiento temporal y se descarga al finalizar la ejecución en Colab. Su número de páginas depende de los temas y capturas de cada ejecución.
+
+## Tecnologías utilizadas
+
+| Tecnología | Uso actual |
+|---|---|
+| Python 3 | Lenguaje y runtime del notebook |
+| Google Colab | Carga del video, ejecución y descarga del PDF |
+| OpenCV | Video, frames, ROI, histogramas, calidad y guardado de imágenes |
+| NumPy | Representación y manipulación de frames |
+| Matplotlib | Visualización didáctica de imágenes e histogramas |
+| ReportLab | Maquetación y generación del PDF |
+| Pillow | Fondos, imágenes y composición visual del reporte |
+| pypdf | Validación del PDF generado |
+
+OpenCV, NumPy y Matplotlib son provistos normalmente por Google Colab. El notebook instala ReportLab, Pillow y pypdf antes de generar y validar el reporte. Actualmente no se fijan versiones; hacerlo queda como mejora futura de reproducibilidad.
+
+### Técnicas evaluadas pero no adoptadas
+
+No forman parte del pipeline consolidado:
+
+- threshold adicional;
+- Canny;
+- operaciones morfológicas;
+- corrección de perspectiva.
+
+Estas técnicas se evaluaron, pero no demostraron aportar valor a las capturas del alcance actual y no existe una geometría validada que justifique recorte o perspectiva. La decisión evita agregar transformaciones sin evidencia de mejora.
+
+## Limitaciones conocidas
+
+Estas limitaciones no son errores del flujo validado:
+
+- **RF03 — ROI fijas:** las coordenadas están ajustadas a la cámara y resolución del video actual.
+- **RF05 — umbral experimental:** `0.40` depende de iluminación, cámara, pizarra y posición de las ROI.
+- **Inicio — referencia libre:** el pipeline asume que las tres ROI están libres alrededor del segundo `0.5`.
+- **RF09 — memoria:** conserva frames completos durante las ventanas de captura; el consumo aumenta con resolución, FPS y eventos.
+- **RF10 — score heurístico:** combina 55% nitidez, 30% estabilidad y 15% contraste dentro de cada evento.
+- **RF13 — fallback de imagen:** funciona para las rutas generadas por el pipeline y conserva margen de robustez futura ante archivos corruptos.
+- **Entorno:** el notebook canónico depende actualmente de `google.colab`.
+- **Dependencias:** las versiones no están fijadas.
+- **Tamaño del notebook:** los outputs persistidos hacen que el archivo pese aproximadamente 10,7 MB.
+
+La clasificación completa entre limitación, deuda técnica, decisión de diseño y mejora futura se mantiene en el plan de trabajo.
+
+## Trabajo colaborativo e integración
+
+El proyecto conserva aportes funcionales reales de los cuatro integrantes. Cuando un módulo necesitó adaptación, se siguió este criterio:
+
+```text
+APORTE ORIGINAL
+  ↓
+DESAFÍO DE INTEGRACIÓN
+  ↓
+ADAPTACIÓN NECESARIA
+  ↓
+SOLUCIÓN CONSOLIDADA
+```
+
+Las ramas originales y de recuperación siguen preservadas como evidencia. Los cambios consolidados llegaron a `main` mediante una historia controlada y un fast-forward final.
+
+## Estructura del repositorio
 
 ```text
 pizarra-snap/
-│
 ├── .gitignore
 ├── README.md
 ├── PLAN_TRABAJO_PIZARRA_SNAP.md
-│
 └── notebooks/
     ├── README.md
     └── PizarraSnap.ipynb
 ```
 
-Las carpetas adicionales se crearán solamente cuando el proyecto realmente las necesite, evitando documentar estructuras que todavía no existen.
+## Documentación
 
----
-
-## 🔄 Metodología de trabajo
-
-El desarrollo se realiza de forma secuencial porque cada módulo depende de la salida validada del anterior.
-
-Cada módulo deberá:
-
-1. partir de la versión actualizada de `main`;
-2. trabajar en una rama propia;
-3. modificar solamente el bloque correspondiente;
-4. mantener código simple, claro y comentado;
-5. incluir al menos una prueba de funcionamiento;
-6. documentar claramente su entrada y su salida;
-7. actualizar el plan de trabajo cuando cambie de estado;
-8. abrir un Pull Request;
-9. pasar una revisión cruzada antes de integrarse a `main`.
-
-### Ramas previstas
-
-```text
-feature/rf04-rf05-nicolas
-feature/rf06-rf09-diego
-feature/rf10-rf12-rf15-walter
-feature/rf13-rf14-rf16-daniela
-```
-
----
-
-## 📚 Conceptos de la Diplomatura aplicados
-
-A lo largo del proyecto se utilizarán, cuando aporten valor real:
-
-- Python;
-- arrays y matrices;
-- NumPy;
-- píxeles;
-- RGB/BGR;
-- escala de grises;
-- slicing;
-- bucles;
-- condicionales;
-- OpenCV;
-- ROI;
-- histogramas;
-- threshold;
-- Gaussian Blur;
-- kernels y convolución;
-- erosión y dilatación;
-- Canny;
-- contornos;
-- transformaciones de perspectiva;
-- procesamiento de imágenes;
-- inteligencia artificial aplicada.
-
----
-
-## 🚧 Estado del proyecto
-
-Los RF01–RF16 están implementados y validados en la versión consolidada `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
-
-El resultado consolidado conserva las responsabilidades funcionales de Nicolás, Diego, Walter y Daniela. Se adaptaron únicamente los contratos necesarios para conectar los módulos, sin sustituir la esencia del trabajo de cada integrante, y se preservaron los comentarios y Markdown compatibles del equipo.
-
-La publicación de esta versión en la rama principal se gestiona mediante un proceso Git controlado; el estado técnico documentado no depende de la rama que esté activa.
+- [Plan técnico, RF, contratos, decisiones e historia](PLAN_TRABAJO_PIZARRA_SNAP.md)
+- [Manual operativo del notebook](notebooks/README.md)
+- [Notebook canónico](notebooks/PizarraSnap.ipynb)

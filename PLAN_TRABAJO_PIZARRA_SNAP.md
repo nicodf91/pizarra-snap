@@ -2,12 +2,41 @@
 
 **Proyecto:** Pizarra Snap  
 **Equipo actual:** Nicolás, Diego, Walter y Daniela  
-**Documento vivo:** este archivo debe actualizarse a medida que cada módulo se complete, pruebe e integre.  
-**Última actualización:** 20/08/2026
+**Documento vivo:** combina el estado técnico actual con las decisiones y la historia de integración.
+
+**Última actualización:** 21/08/2026
 
 ---
 
-## 1. Objetivo del proyecto
+## Índice
+
+- [1. Objetivo y alcance](#1-objetivo-y-alcance)
+- [2. Estado consolidado y criterio general](#2-estado-consolidado-y-criterio-general)
+  - [Arquitectura funcional y decisiones consolidadas](#arquitectura-funcional-y-decisiones-consolidadas)
+- [3. Convención de estados](#3-convención-de-estados)
+- [4. Matriz maestra RF01–RF16](#4-matriz-maestra-rf01rf16)
+- [5. Módulo de Nicolás — RF01 a RF05](#5-módulo-de-nicolás--rf01-a-rf05)
+- [6. Módulo de Diego — RF06 a RF09](#6-módulo-de-diego--rf06-a-rf09)
+- [7. Módulo de Walter — RF10, RF11, RF12 y RF15](#7-módulo-de-walter--rf10-rf11-rf12-y-rf15)
+- [8. Módulo de Daniela — RF13, RF14 y RF16](#8-módulo-de-daniela--rf13-rf14-y-rf16)
+- [9. Contratos y flujo entre integrantes](#9-contratos-y-flujo-entre-integrantes)
+- [10. Revisión cruzada](#10-revisión-cruzada)
+- [11. Organización actual del repositorio](#11-organización-actual-del-repositorio)
+- [12. Video de prueba](#12-video-de-prueba)
+- [13. Historia y criterio de trabajo con GitHub](#13-historia-y-criterio-de-trabajo-con-github)
+- [14. Regla importante para el notebook](#14-regla-importante-para-el-notebook)
+- [15. Checklist de consolidación completado](#15-checklist-de-consolidación-completado)
+- [16. Estado técnico consolidado](#16-estado-técnico-consolidado)
+- [17. Historia de integración](#17-historia-de-integración)
+- [18. Criterio para actualizar este documento](#18-criterio-para-actualizar-este-documento)
+- [19. Limitaciones vigentes](#19-limitaciones-vigentes)
+- [20. Deuda técnica y mejoras futuras](#20-deuda-técnica-y-mejoras-futuras)
+- [21. Glosario](#21-glosario)
+- [22. Próximos pasos](#22-próximos-pasos)
+
+---
+
+## 1. Objetivo y alcance
 
 Pizarra Snap es un sistema de visión por computadora pensado para asistir a docentes durante una clase presencial.
 
@@ -17,17 +46,55 @@ Una cámara fija observa la pizarra. El docente puede generar tres tipos de even
 - ⭐ **CONCEPTO IMPORTANTE**
 - 📌 **FIN DE TEMA**
 
-El sistema detectará visualmente el evento, esperará a que la zona vuelva a quedar visible y analizará una breve secuencia de frames **posteriores** a la acción para seleccionar la mejor imagen. Las capturas se clasificarán y posteriormente se utilizarán para generar un reporte PDF organizado por temas.
+El sistema detecta visualmente el evento, espera a que la zona vuelva a quedar visible y analiza una breve secuencia de frames **posteriores** a la acción para seleccionar la mejor imagen. Las capturas se clasifican y posteriormente se utilizan para generar un reporte PDF organizado por temas.
 
 > La arquitectura vigente trabaja con frames **posteriores al evento**. No se utiliza un buffer retrospectivo como parte del flujo principal.
 
+El alcance validado utiliza un video pregrabado y una cámara fija. No incluye captura de cámara en vivo, OCR ni generación de resúmenes mediante modelos de IA.
+
 ---
 
-## 2. Criterio general de trabajo
+## 2. Estado consolidado y criterio general
+
+> **Estado actual:** RF01–RF16 están implementados en `main`. El notebook canónico fue ejecutado mediante Run All en Google Colab con el video oficial y generó correctamente las capturas y el PDF final.
+
+La versión consolidada llegó a `main` mediante fast-forward en el commit:
+
+```text
+5900fa5a7d982e408259760617fde1f613426f79
+```
+
+El notebook validado conserva el hash:
+
+```text
+583c2db6bb67f59db5d6df5155a1686ce12ee221
+```
+
+Los valores observados en la corrida oficial —tres eventos, 57 candidatos por evento, tres capturas, un tema cerrado y un PDF de tres páginas— son resultados de validación. No constituyen constantes universales del algoritmo.
+
+### Arquitectura funcional y decisiones consolidadas
+
+```text
+VIDEO → ROI E HISTOGRAMAS → EVENTOS → CANDIDATOS
+      → CALIDAD Y PNG → CATEGORÍAS Y TEMAS → PDF
+```
+
+| Decisión | Significado en Pizarra Snap |
+|---|---|
+| Ventana posterior | RF08/RF09 recolectan frames después de confirmar el evento; el flujo principal no usa un buffer retrospectivo |
+| Detección visual | RF03–RF05 utilizan ROI fijas, histogramas y distancia de Bhattacharyya con umbral `0.40` |
+| Contrato en memoria | Walter recibe los candidatos de Diego sin volver a abrir ni reposicionar el video |
+| Selección relativa | RF10 compara nitidez, estabilidad y contraste dentro de cada evento con pesos 55/30/15 |
+| Original preservada | RF12 guarda el ganador; RF15 conserva CLAHE sólo cuando mejora las métricas y nunca reemplaza la original |
+| Contrato liviano | RF13 entrega identidades y rutas a RF14/RF16 en lugar de duplicar frames completos |
+| Generación y descarga separadas | RF16 genera y valida el PDF; la última celda inicia la descarga en Colab |
+| Entorno canónico | El recorrido operativo actual utiliza Google Colab y almacenamiento efímero de sesión |
+
+### Criterio general de trabajo
 
 El proyecto se divide siguiendo los requerimientos funcionales RF01–RF16.
 
-Cada módulo deberá:
+Durante la integración, cada módulo siguió estos criterios:
 
 1. partir del resultado validado del módulo anterior;
 2. mantener el código comentado de manera breve, clara y didáctica;
@@ -48,32 +115,32 @@ Cada módulo deberá:
 | 🟡 VALIDADO CON LIMITACIÓN | Funciona para el alcance validado y conserva una limitación documentada |
 | ✅ REALIZADO | Código implementado y validado por el responsable |
 | 🟡 EN PROGRESO | El integrante está trabajando en el módulo |
-| ⬜ PENDIENTE | Todavía no comenzó |
+| ⬜ PENDIENTE | Trabajo aún no iniciado |
 | 🔁 EN REVISIÓN | Implementado y pendiente de revisión cruzada antes de integrar |
 | ⚠️ AJUSTE | Funciona, pero requiere calibración o mejora |
 
 ---
 
-# 4. Estado general del proyecto
+# 4. Matriz maestra RF01–RF16
 
-| RF | Requerimiento | Responsable | Estado |
-|---|---|---|---|
-| RF01 | Lectura de video | Nicolás | ✅ VALIDADO |
-| RF02 | Procesamiento de frames | Nicolás | ✅ VALIDADO |
-| RF03 | Regiones de interés (ROI) | Nicolás | ✅ VALIDADO |
-| RF04 | Análisis de histogramas | Nicolás | ✅ VALIDADO |
-| RF05 | Detección de cambios | Nicolás | 🟡 VALIDADO CON LIMITACIÓN |
-| RF06 | Identificación del comando | Diego | ✅ VALIDADO |
-| RF07 | Validación de la acción | Diego | ✅ VALIDADO |
-| RF08 | Ventana temporal posterior | Diego | ✅ VALIDADO |
-| RF09 | Captura posterior al evento | Diego | 🟡 VALIDADO CON LIMITACIÓN |
-| RF10 | Evaluación de calidad | Walter | ✅ VALIDADO |
-| RF11 | Selección del mejor frame | Walter | ✅ VALIDADO |
-| RF12 | Guardado de captura | Walter | ✅ VALIDADO |
-| RF13 | Clasificación de captura | Daniela | ✅ VALIDADO |
-| RF14 | Organización por temas | Daniela | ✅ VALIDADO |
-| RF15 | Procesamiento de imagen | Walter | ✅ VALIDADO |
-| RF16 | Generación de reporte PDF | Daniela | ✅ VALIDADO |
+| RF | Responsable | Objetivo | Entrada | Proceso | Salida | Dependencia anterior | Entrega a | Estado | Limitación |
+|---|---|---|---|---|---|---|---|---|---|
+| RF01 | Nicolás | Cargar y abrir el video | MP4 seleccionado | `files.upload` y `cv2.VideoCapture` | Video, FPS, resolución y duración | — | RF02 | ✅ VALIDADO | El selector espera al menos un archivo |
+| RF02 | Nicolás | Leer y comprender frames | Video abierto | Lectura BGR y análisis NumPy | Frame y propiedades de píxel | RF01 | RF03 | ✅ VALIDADO | Depende de una lectura válida |
+| RF03 | Nicolás | Definir las tres ROI | Frame completo | Coordenadas y slicing | Tres ROI y sus coordenadas | RF02 | RF04 | ✅ VALIDADO | ROI fijas para cámara y resolución actuales |
+| RF04 | Nicolás | Representar visualmente cada ROI | ROI BGR | Gris, Gaussian Blur, histograma y L1 | Histograma normalizado | RF03 | RF05 | ✅ VALIDADO | El histograma no conserva posición espacial |
+| RF05 | Nicolás | Detectar cambios | Histograma actual y referencia | Distancia de Bhattacharyya + umbral | Distancia y `LIBRE/CUBIERTA` | RF04 | RF06 | 🟡 VALIDADO CON LIMITACIÓN | Umbral `0.40` dependiente del escenario |
+| RF06 | Diego | Identificar el comando | Estado de las ROI | Mapping de ROI a evento | Tipo de evento | RF05 | RF07 | ✅ VALIDADO | Requiere distinguir una ROI activa |
+| RF07 | Diego | Validar la acción | Transiciones de estado | `LIBRE → CUBIERTA → LIBRE`, duración y exclusividad | Evento confirmado + momento | RF06 | RF08 | ✅ VALIDADO | Cobertura válida entre 0,5 s y 4 s |
+| RF08 | Diego | Abrir la ventana posterior | Evento confirmado y FPS | `int(2.0 * fps)` | Ventana de captura | RF07 | RF09 | ✅ VALIDADO | Duración aproximada por truncamiento |
+| RF09 | Diego | Recolectar candidatos | Frames posteriores | Copia de frames completos | `capturas` con `frames_candidatos` | RF08 | RF10 | 🟡 VALIDADO CON LIMITACIÓN | Consumo elevado de memoria |
+| RF10 | Walter | Evaluar calidad | Lista de candidatos | Nitidez, contraste, movimiento y estabilidad | Evaluaciones y score | RF09 | RF11 | ✅ VALIDADO | Pesos heurísticos 55/30/15 |
+| RF11 | Walter | Elegir el mejor frame | Evaluaciones y candidatos | Máximo score y desempates deterministas | Ganador, índice y métricas | RF10 | RF12/RF15 | ✅ VALIDADO | Selección visual, no semántica |
+| RF12 | Walter | Guardar la captura | Frame ganador y destino | `cv2.imwrite` con validación | PNG original y ruta absoluta | RF11 | RF13 | ✅ VALIDADO | Depende del filesystem de la sesión |
+| RF13 | Daniela | Clasificar y aligerar el contrato | `resultados_walter` | Mapping de evento y selección de ruta | `resultados_reporte` | RF12/RF15 | RF14 | ✅ VALIDADO | Fallback con margen de robustez futura |
+| RF14 | Daniela | Organizar por temas | Registros ordenados | Agrupación y cierre por `FIN_DE_TEMA` | Lista de temas | RF13 | RF16 | ✅ VALIDADO | Depende del orden de eventos |
+| RF15 | Walter | Mejorar opcionalmente | Frame ganador BGR | Gris + CLAHE con criterios medibles | Procesada o `None` + evaluación | RF11 | RF13 | ✅ VALIDADO | Umbrales heurísticos; original preservada |
+| RF16 | Daniela | Generar el reporte | Temas, destino y datos de portada | Validación, maquetación ReportLab y apertura con pypdf | `Path` del PDF | RF14 | Usuario | ✅ VALIDADO | Páginas variables; dependencias sin versión |
 
 ---
 
@@ -92,6 +159,14 @@ RF05 🟡 VALIDADO CON LIMITACIÓN
 ## Objetivo general del módulo
 
 Construir la base de visión por computadora del proyecto: leer el video, trabajar con sus frames, definir las tres ROI y transformar esas regiones en señales capaces de indicar si una zona está libre o cubierta.
+
+### Contribución consolidada
+
+- **Aporte:** Nicolás desarrolló RF01–RF05: carga de video, análisis de frames, ROI, histogramas, distancia de Bhattacharyya y estados `LIBRE/CUBIERTA`.
+- **Qué funcionó:** las coordenadas y el umbral experimental separaron correctamente los casos libres, transiciones y coberturas claras del video oficial.
+- **Desafío de integración:** las referencias libres utilizadas durante la exploración provenían de segundos elegidos manualmente.
+- **Adaptación necesaria:** para el recorrido continuo, Diego calculó referencias limpias comunes al inicio del video sin reemplazar las funciones de Nicolás.
+- **Resultado final:** RF05 entrega la señal visual que permite identificar y validar los tres comandos.
 
 ---
 
@@ -411,11 +486,19 @@ Esta agrupación mantiene juntas dos etapas fuertemente relacionadas:
 DETECTAR COMANDO → VALIDAR EVENTO → ABRIR VENTANA → RECOLECTAR FRAMES
 ```
 
+### Contribución consolidada
+
+- **Aporte:** Diego implementó RF06–RF09 y sus commits se incorporaron conservando su autoría Git.
+- **Qué funcionó:** el recorrido continuo detecta los tres eventos reales, valida duración y exclusividad y obtiene ventanas completas con los FPS reales.
+- **Desafío de integración:** la salida debía conectarse con un selector de calidad sin reabrir el video y sin conservar candidatos indefinidamente.
+- **Adaptación necesaria:** se formalizó `capturas` como contrato y el módulo de Walter libera cada lista después de guardar el ganador.
+- **Resultado final:** cada evento confirmado entrega su tipo, momento y lista ordenada de frames candidatos.
+
 ---
 
 ## RF06 — Identificación del comando
 
-### Tareas previstas
+### Implementación actual
 
 Relacionar cada ROI con su evento:
 
@@ -429,7 +512,7 @@ ROI Fin de tema         → FIN_DE_TEMA
 - Evitar confundir una ROI con otra.
 - Guardar el tipo de evento en una variable clara.
 
-### Resultado esperado
+### Salida actual
 
 Generar uno de estos eventos:
 
@@ -443,7 +526,7 @@ FIN_DE_TEMA
 
 ## RF07 — Validación de la acción
 
-### Tareas previstas
+### Implementación actual
 
 Implementar la secuencia válida:
 
@@ -453,14 +536,14 @@ VISIBLE → CUBIERTA → VISIBLE
 
 La acción no debe validarse mientras el símbolo continúe tapado.
 
-Se deberá considerar:
+La implementación considera:
 
 - duración mínima de la cobertura;
 - retorno de la ROI al estado visible;
 - bloqueo temporal para evitar duplicados;
 - falsos positivos.
 
-### Resultado esperado
+### Salida actual
 
 Evento único y validado solamente después de que la zona vuelva a quedar visible.
 
@@ -476,7 +559,7 @@ momento_del_evento
 
 ## RF08 — Ventana temporal posterior
 
-### Tareas previstas
+### Implementación actual
 
 - Comenzar la ventana únicamente después de RF07.
 - Trabajar con una duración inicial aproximada de **2 segundos**.
@@ -485,7 +568,7 @@ momento_del_evento
 - Evitar depender innecesariamente de un valor fijo de 30 FPS.
 - Almacenar solamente los frames candidatos de esa ventana.
 
-### Resultado esperado
+### Salida actual
 
 Lista o colección de frames obtenidos después de la activación.
 
@@ -493,7 +576,7 @@ Lista o colección de frames obtenidos después de la activación.
 
 ## RF09 — Captura posterior al evento
 
-### Tareas previstas
+### Implementación actual
 
 - Leer los frames durante la ventana.
 - Numerarlos o asociarlos con su posición temporal.
@@ -501,13 +584,13 @@ Lista o colección de frames obtenidos después de la activación.
 - Finalizar correctamente la ventana.
 - No conservar indefinidamente frames que ya no sean necesarios.
 
-### Resultado esperado
+### Salida actual
 
 Conjunto de frames candidatos listo para evaluar la calidad.
 
 ### Entrega de Diego a Walter
 
-Diego deberá entregar una estructura semejante a:
+Diego entrega la estructura:
 
 ```text
 frames_candidatos
@@ -572,6 +655,14 @@ Esta estimación no incluye el overhead de Python, OpenCV, listas ni métricas. 
 ## Objetivo
 
 Elegir automáticamente la mejor captura posterior al evento, guardarla y mejorar la imagen de la pizarra cuando una transformación aporte valor real.
+
+### Contribución consolidada
+
+- **Aporte:** Walter aportó nitidez mediante varianza del Laplaciano, contraste, selección de frames y persistencia con `cv2.imwrite`.
+- **Qué funcionó:** las métricas permiten comparar candidatos y evitar elegir automáticamente el primer frame disponible.
+- **Desafío de integración:** la rama original volvía a posicionar el video y utilizaba cobertura de la ROI, mientras el contrato actual ya entrega frames posteriores al evento.
+- **Adaptación necesaria:** la selección consume `frames_candidatos`, agrega estabilidad y usa CLAHE sólo cuando supera criterios medibles.
+- **Resultado final:** se conserva una captura original por evento, sus métricas y una versión procesada opcional sin reemplazar la original.
 
 ### Recuperación semántica del trabajo previo
 
@@ -670,7 +761,7 @@ Después de guardar cada resultado se vacía la lista `frames_candidatos` corres
 - ejecución real completa: `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE`, `FIN_DE_TEMA`, en ese orden, con 57 candidatos por evento;
 - validación estructural y compilación de todas las celdas del notebook.
 
-El módulo forma parte de la versión consolidada validada `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
+El módulo forma parte de la versión consolidada incorporada a `main` en `5900fa5a7d982e408259760617fde1f613426f79`.
 
 ---
 
@@ -683,6 +774,14 @@ El módulo forma parte de la versión consolidada validada `7a17113c1eaee7ad3d7e
 ## Objetivo
 
 Adaptar la salida auditada de Walter, organizar cada captura exactamente una vez y generar el reporte final sin reabrir el video ni reconstruir eventos.
+
+### Contribución consolidada
+
+- **Aporte:** Daniela aportó categorías, organización por temas, ReportLab y el lenguaje visual completo del PDF.
+- **Qué funcionó:** el mapping de eventos, la estructura temática, la portada, las tarjetas y la diferenciación visual de categorías.
+- **Desafío de integración:** la propuesta original incluía segundos y rutas reconstruidos manualmente y más de una representación de temas y renderer.
+- **Adaptación necesaria:** RF13 consume rutas persistidas de Walter, RF14 conserva una única secuencia ordenada y RF16 recibe un destino explícito.
+- **Resultado final:** el PDF usa el diseño visual original de Daniela sobre los datos reales de RF13/RF14 y se valida antes de su descarga.
 
 La recuperación se implementó sobre `integration/auditoria-pizarra-snap`. La rama original de Daniela se utilizó únicamente como referencia; no se hizo merge ni cherry-pick.
 
@@ -830,13 +929,13 @@ Si el tiempo y el alcance del trabajo lo permiten, se podrá evaluar posteriorme
 
 Estas funciones son complementarias y no deben impedir completar primero el flujo principal.
 
-### Resultado esperado
+### Resultado final
 
 Archivo PDF final organizado y legible.
 
 ---
 
-# 9. Flujo de dependencias entre integrantes
+# 9. Contratos y flujo entre integrantes
 
 ```text
 Nicolás
@@ -856,7 +955,19 @@ Daniela
 RF13 → RF14 → RF16
 ```
 
-Cada integrante debe comenzar utilizando como entrada la salida validada del módulo anterior.
+En el flujo consolidado, cada etapa utiliza como entrada la salida validada de la etapa anterior.
+
+### Contratos consolidados
+
+| Frontera | Entrada recibida | Transformación | Entrega |
+|---|---|---|---|
+| Nicolás → Diego | Coordenadas, histogramas y estado `LIBRE/CUBIERTA` | Asociación de ROI, validación temporal y evento | `capturas` con tipo, momento y candidatos |
+| Diego → Walter | `frames_candidatos` posteriores al evento | Métricas, selección, guardado y CLAHE opcional | `resultados_walter` con ganador, métricas y rutas |
+| Walter → Daniela | Identidad del evento y rutas persistidas | Categoría y contrato liviano | `resultados_reporte` |
+| RF13 → RF14 | Registros clasificados y ordenados | Agrupación y cierre | `temas` |
+| RF14 → RF16 | Temas y capturas | Validación y composición visual | `Path` del PDF |
+
+Estos contratos evitan que cada etapa vuelva a abrir el video o reconstruya datos que ya fueron resueltos por el módulo anterior.
 
 ### Secuencia funcional completa
 
@@ -874,11 +985,31 @@ CALIDAD Y PROCESAMIENTO
 ORGANIZACIÓN Y PDF
 ```
 
+### Autoría Git y responsabilidad funcional
+
+La autoría de un commit indica quién creó ese objeto Git. La responsabilidad funcional documenta quién desarrolló el módulo original y qué aporte se preservó.
+
+Los commits de recuperación:
+
+```text
+f7899f8 feat(rf10-rf15): recover Walter frame selection pipeline
+03edc9c feat(rf13-rf16): recover Daniela reporting pipeline
+```
+
+tienen autor Git `nicodf91` porque reconstruyen semánticamente los aportes sobre la historia consolidada. Esto no traslada a Nicolás la responsabilidad funcional de RF10–RF16:
+
+```text
+Walter  — RF10–RF12 y RF15
+Daniela — RF13–RF14 y RF16
+```
+
+Las ramas originales `seleccionFrame` y `feature/rf13-rf14-rf16-daniela` permanecen preservadas como evidencia. `seleccionFrame` se auditó sin unir su historia Git no relacionada.
+
 ---
 
 # 10. Revisión cruzada
 
-Para evitar que cada integrante trabaje de manera aislada, los módulos tendrán un responsable principal y otra persona que deberá probarlos antes de integrarlos a `main`.
+Durante el desarrollo se propuso que cada módulo tuviera un responsable principal y una revisión cruzada antes de integrarlo a `main`. La tabla conserva esa asignación como parte de la metodología utilizada.
 
 | Responsable | Revisor sugerido |
 |---|---|
@@ -923,11 +1054,11 @@ Este documento. Contiene la planificación detallada, responsabilidades, depende
 
 ### `notebooks/PizarraSnap.ipynb`
 
-Notebook oficial de desarrollo.
+Notebook canónico y fuente de verdad funcional.
 
 ### `notebooks/README.md`
 
-Explica la finalidad de la carpeta de notebooks.
+Manual operativo para ejecutar el notebook en Google Colab.
 
 > Nuevas carpetas como `data/`, `docs/` o `captures/` se crearán solamente cuando exista una necesidad concreta. No se documentarán como parte de la estructura actual antes de existir.
 
@@ -951,13 +1082,13 @@ El nombre esperado durante el desarrollo es:
 proyecto_pizzarasnap.mp4
 ```
 
-El archivo `.gitignore` evita subir archivos `.mp4` accidentalmente al repositorio.
+El archivo `.gitignore` excluye específicamente `/proyecto_pizzarasnap.mp4`. Otros archivos MP4 no quedan ocultos por una regla global y pueden versionarse deliberadamente si el equipo lo decide.
 
 ---
 
-# 13. Flujo de trabajo con GitHub
+# 13. Historia y criterio de trabajo con GitHub
 
-Para reducir conflictos sobre el notebook oficial:
+Durante el desarrollo se utilizó un flujo por ramas para reducir conflictos sobre el notebook oficial. El criterio sigue siendo válido para futuras contribuciones:
 
 1. trabajar siempre desde la versión actualizada de `main`;
 2. crear una rama para cada bloque de requerimientos;
@@ -969,14 +1100,22 @@ Para reducir conflictos sobre el notebook oficial:
 8. realizar la revisión cruzada;
 9. integrar a `main` solamente cuando el módulo funcione.
 
-## Ramas sugeridas
+## Ramas preservadas
 
-```text
-feature/rf04-rf05-nicolas
-feature/rf06-rf09-diego
-feature/rf10-rf12-rf15-walter
-feature/rf13-rf14-rf16-daniela
-```
+| Rama | Función histórica |
+|---|---|
+| `feature/rf06-rf09-diego` | Implementación de Diego incorporada a la línea consolidada |
+| `seleccionFrame` | Aporte original de Walter auditado semánticamente |
+| `feature/rf13-rf14-rf16-daniela` | Aporte original de Daniela |
+| `recovery/walter-rf10-rf12-rf15` | Recuperación compatible con el contrato de Diego |
+| `recovery/daniela-rf13-rf14-rf16` | Recuperación compatible con `resultados_walter` |
+| `hardening/pre-main-consolidation` | Validaciones y robustez previas a `main` |
+| `fix/rf16-restaurar-estilo-daniela` | Restauración del diseño visual original |
+| `docs/recuperar-identidad-equipo` | Recuperación de explicaciones compatibles |
+| `docs/finalizar-estado-pre-main` | Cierre documental anterior a la promoción |
+| `integration/auditoria-pizarra-snap` | Rama acumulativa validada antes del fast-forward final |
+
+Estas ramas son evidencia histórica. Su limpieza, si alguna vez se decide, debe tratarse como una tarea independiente.
 
 ## Ejemplos de commits
 
@@ -995,7 +1134,7 @@ docs: actualiza estado de RF04 y RF05
 
 # 14. Regla importante para el notebook
 
-El código deberá mantenerse:
+El código se mantiene:
 
 - simple;
 - breve;
@@ -1020,35 +1159,53 @@ Evitar comentarios conversacionales como:
 
 ---
 
-# 15. Checklist antes de integrar un módulo a `main`
+# 15. Checklist de consolidación completado
 
-Antes de integrar un módulo:
+La versión actual superó los controles relevantes para su incorporación a `main`:
 
-- [ ] El código ejecuta sin errores.
-- [ ] Los comentarios son claros.
-- [ ] Se entiende la entrada del módulo.
-- [ ] Se entiende la salida del módulo.
-- [ ] Existe al menos una prueba.
-- [ ] El responsable revisó los resultados.
-- [ ] El notebook fue actualizado.
-- [ ] `PLAN_TRABAJO_PIZARRA_SNAP.md` fue actualizado.
-- [ ] El revisor cruzado pudo ejecutarlo.
-- [ ] El Pull Request fue revisado.
-- [ ] El cambio fue integrado a la rama principal.
+- [x] El código ejecutó sin errores mediante Run All con el video oficial.
+- [x] Las entradas y salidas de los módulos quedaron documentadas.
+- [x] RF01–RF16 incluyen comprobaciones o validaciones acordes a su alcance.
+- [x] Se revisaron los resultados visuales de las capturas y del PDF.
+- [x] El notebook fue validado manualmente desde una descarga de `main`.
+- [x] El plan y el README registraron el estado consolidado.
+- [x] Se preservaron los aportes y la responsabilidad funcional del equipo.
+- [x] La historia acumulativa se verificó como fast-forward posible.
+- [x] La versión consolidada se incorporó a `main` mediante fast-forward.
+
+Para cambios futuros deben repetirse controles proporcionales al alcance. Un cambio documental no requiere reejecutar el notebook si su hash permanece idéntico; un cambio funcional sí exige una nueva validación completa.
 
 ---
 
 # 16. Estado técnico consolidado
 
-Los RF01–RF16 están conectados y validados de punta a punta en la versión consolidada `7a17113c1eaee7ad3d7e24b8855177fc948924d7`.
+Los RF01–RF16 están conectados y validados de punta a punta en `main`, commit `5900fa5a7d982e408259760617fde1f613426f79`.
 
-La validación incluye sintaxis, Run All con el video real, archivos generados, PDF final con el diseño original de Daniela y preservación de los comentarios y Markdown compatibles del equipo.
+La validación incluye análisis sintáctico, Run All con el video oficial, archivos generados, descarga automática del PDF, diseño visual original de Daniela y preservación de los comentarios y Markdown compatibles del equipo.
 
-La promoción de la versión validada a la rama principal se realiza mediante un proceso Git controlado. Este plan documenta el estado técnico consolidado sin depender de la rama activa.
+La prueba manual final se realizó descargando el notebook directamente desde `main` y cargándolo en Google Colab. El resultado fue:
+
+```text
+3 eventos detectados
+57 frames candidatos por evento
+3 capturas seleccionadas
+1 tema cerrado
+PDF final de 3 páginas
+descarga automática correcta
+```
+
+La portada conservó los datos acordados:
+
+```text
+INSTITUCIÓN: UTN
+MATERIA: DIPLOMATURA EN IA
+```
+
+La incorporación a `main` se completó mediante fast-forward. El número de eventos, candidatos, temas y páginas corresponde a esta corrida de validación y puede variar con otras entradas.
 
 ---
 
-# 17. Historial de avances
+# 17. Historia de integración
 
 ## 10/08/2026 — Desarrollo inicial
 
@@ -1073,11 +1230,11 @@ La promoción de la versión validada a la rama principal se realiza mediante un
 - ✅ RF13–RF14 y RF16 continúan asignados a Daniela.
 - ✅ Flujo de dependencias actualizado.
 - ✅ Revisión cruzada actualizada.
-- ✅ Ramas sugeridas actualizadas.
+- ✅ Nombres de ramas de trabajo actualizados.
 - ✅ Enlace real del video de Drive incorporado al plan.
 - ✅ Próximo responsable actualizado.
 
-### Próximo paso en ese momento
+### Continuidad prevista en ese momento
 
 - Nicolás inicia RF04 y RF05.
 
@@ -1101,7 +1258,7 @@ La promoción de la versión validada a la rama principal se realiza mediante un
 - ✅ Plan de trabajo actualizado.
 - 🔁 Módulo preparado para revisión cruzada y Pull Request antes de integrar a `main`.
 
-### Próximo paso
+### Continuidad prevista en ese momento
 
 - Diego revisa la entrega de Nicolás y continúa con RF06–RF09 desde la salida `LIBRE / CUBIERTA`.
 
@@ -1114,7 +1271,7 @@ La promoción de la versión validada a la rama principal se realiza mediante un
 - ✅ RF07 — Validación de la acción: exige que la ROI se cubra en soledad
   (ninguna otra ROI cubierta al mismo tiempo) y que la cobertura dure
   entre 0.5s y 4s, para descartar el ruido de que el profesor pase cerca
-  del pizarrón mientras escribe.
+  de la pizarra mientras escribe.
 - ✅ RF08 — Ventana temporal posterior: se abre apenas se confirma el
   evento, con duración calculada en frames a partir del fps real del
   video (no se asume 30 fps fijo).
@@ -1127,7 +1284,7 @@ La promoción de la versión validada a la rama principal se realiza mediante un
 - 🔁 Módulo preparado para revisión cruzada (Walter) y Pull Request antes
   de integrar a `main`.
 
-### Próximo paso
+### Continuidad prevista en ese momento
 
 - Walter revisa la entrega de Diego y continúa con RF10–RF12 y RF15 a
   partir de `capturas`.
@@ -1150,15 +1307,45 @@ La promoción de la versión validada a la rama principal se realiza mediante un
 
 - ✅ RF13 consume directamente los tres resultados de Walter.
 - ✅ RF14 conserva orden, unicidad y cierre de tema.
-- ✅ RF16 genera un PDF final válido de cuatro páginas.
+- ⚪ Durante una validación intermedia de RF16, una versión previa generó un PDF válido de cuatro páginas.
 - ✅ Pipeline real verificado con los tres eventos y 57 candidatos por evento.
 - ✅ Recovery auditada e incorporada a la versión consolidada validada en esa etapa.
 
+## 20/08/2026 — Hardening, restauración visual y documentación
+
+- ✅ El pipeline consolidado recibió validaciones adicionales de contratos, filesystem y PDF.
+- ✅ Se restauró la identidad visual original de Daniela sobre el contrato final de RF13/RF14.
+- ✅ Los fondos se generan en un directorio temporal y no agregan assets al repositorio.
+- ✅ La portada se actualizó únicamente con institución `UTN` y materia `DIPLOMATURA EN IA`.
+- ✅ Se recuperaron comentarios y Markdown compatibles del equipo sin modificar la lógica validada.
+- ✅ Se neutralizó la documentación de estado para preparar su promoción.
+
+## 20/08/2026 — Promoción definitiva a `main`
+
+- ✅ La rama de integración se verificó como descendiente lineal de `main`.
+- ✅ Los ocho commits consolidados conservaron sus SHAs originales.
+- ✅ `main` avanzó mediante fast-forward hasta `5900fa5a7d982e408259760617fde1f613426f79`.
+- ✅ No se creó merge commit ni se reescribió historia.
+- ✅ El notebook mantuvo el hash `583c2db6bb67f59db5d6df5155a1686ce12ee221`.
+
+## Validación manual final desde `main`
+
+Después de la promoción, el notebook se descargó desde GitHub, se cargó en Google Colab y se ejecutó mediante Run All con el video oficial. Generó tres capturas, un tema cerrado y un PDF final de tres páginas con descarga automática.
+
+La diferencia entre cuatro y tres páginas refleja dos momentos de validación, no una contradicción funcional:
+
+```text
+validación intermedia → PDF de 4 páginas
+restauración y renderer consolidado → PDF final de 3 páginas en la corrida oficial
+```
+
+El número de páginas depende de las capturas, los temas y la maquetación; no es una constante de RF16.
+
 ---
 
-# 18. Regla para actualizar este documento
+# 18. Criterio para actualizar este documento
 
-Cada vez que un integrante complete trabajo, agregar una entrada al historial.
+Cada cambio futuro debe actualizar primero el estado actual y, cuando aporte trazabilidad, agregar una entrada breve a la historia.
 
 Ejemplo:
 
@@ -1179,3 +1366,96 @@ De esta forma el archivo funciona simultáneamente como:
 - reparto de responsabilidades;
 - registro de avances;
 - documentación de integración.
+
+La historia debe explicar decisiones y aprendizajes. No debe convertirse en una repetición indefinida del estado actual.
+
+---
+
+# 19. Limitaciones vigentes
+
+Una limitación describe el alcance dentro del cual el sistema fue validado. No implica que exista un error en la corrida oficial.
+
+| Área | Clasificación | Descripción | Impacto actual |
+|---|---|---|---|
+| RF03 | LIMITACIÓN | Las ROI usan coordenadas fijas ajustadas a 1920 × 1080 y a la cámara del video oficial | Ninguno dentro del escenario validado |
+| RF05 | LIMITACIÓN | El umbral `0.40` depende de cámara, iluminación, pizarra y posición de las ROI | Puede requerir calibración con otro escenario |
+| Inicio | DECISIÓN DE DISEÑO | Las referencias libres se calculan alrededor del segundo `0.5` | Requiere que las tres ROI comiencen libres |
+| RF09 | LIMITACIÓN | Se conservan frames completos durante las ventanas posteriores | El consumo crece con resolución, FPS y eventos |
+| RF10 | DECISIÓN DE DISEÑO | El score relativo pondera 55% nitidez, 30% estabilidad y 15% contraste | Funciona para la validación actual; no es un modelo universal |
+| RF13 | MEJORA FUTURA | El fallback prioriza una ruta procesada existente y luego la original | Existe margen de robustez adicional ante un archivo existente pero corrupto |
+| Colab | DECISIÓN DE DISEÑO | El flujo canónico utiliza `google.colab` para upload y download | Jupyter local requiere adaptación |
+
+No se detectó un bug bloqueante en el flujo validado.
+
+---
+
+# 20. Deuda técnica y mejoras futuras
+
+La deuda técnica identifica trabajo posible para mejorar escalabilidad, reproducibilidad o mantenimiento. No debe confundirse con un requisito incompleto de la entrega actual.
+
+| Tema | Clasificación | Estado | Posible evolución |
+|---|---|---|---|
+| Memoria RF09 | DEUDA TÉCNICA | Los candidatos completos pueden superar 1 GiB en la corrida oficial | Evaluación streaming, muestreo o almacenamiento comprimido |
+| Dependencias | DEUDA TÉCNICA | ReportLab, Pillow y pypdf se instalan sin versiones; Colab provee el resto | Fijar versiones en una tarea independiente |
+| Outputs del notebook | DEUDA TÉCNICA | Los outputs persistidos hacen que el notebook pese aproximadamente 10,7 MB | Normalizar en una tarea separada y repetir Run All |
+| Selector de archivos | MEJORA FUTURA | Cero o múltiples archivos no tienen manejo robusto | Validar cantidad, cancelación y extensión |
+| Automatización | MEJORA FUTURA | Las pruebas viven dentro del notebook y no existe CI | Extraer pruebas sólo si el proyecto evoluciona hacia mantenimiento continuo |
+| Generalización | MEJORA FUTURA | ROI, referencia libre y umbral están calibrados para el video oficial | Incorporar una fase de calibración explícita |
+| Extensiones | MEJORA FUTURA | OCR, modelos de visión y resúmenes no forman parte del flujo actual | Evaluar después de preservar la estabilidad de RF01–RF16 |
+
+Ninguna de estas mejoras se implementa durante una actualización exclusivamente documental.
+
+---
+
+# 21. Glosario
+
+| Término | Explicación dentro de Pizarra Snap |
+|---|---|
+| Frame | Imagen individual del video que todavía se encuentra en memoria |
+| ROI | Región de interés: recorte rectangular observado como comando visual |
+| Histograma | Resumen de cuántos píxeles existen en cada intensidad de gris |
+| Umbral | Valor que separa los estados técnicos `LIBRE` y `CUBIERTA` |
+| FPS | Frames por segundo informados por el video |
+| Evento | Acción validada después de completar `LIBRE → CUBIERTA → LIBRE` |
+| `tipo_evento` | Identificador técnico: `CAPTURA_NORMAL`, `CONCEPTO_IMPORTANTE` o `FIN_DE_TEMA` |
+| Categoría | Clasificación usada por el reporte: `NORMAL`, `IMPORTANTE` o `FIN_DE_TEMA` |
+| Ventana temporal | Intervalo posterior al evento durante el cual se recolectan imágenes |
+| Frame candidato | Una de las imágenes conservadas para comparar su calidad |
+| Captura | Frame ganador o registro persistido después de la selección |
+| Captura original | Frame ganador guardado sin reemplazar su contenido |
+| Captura procesada | Versión gris con CLAHE conservada sólo si supera criterios de calidad |
+| Laplaciano | Operador utilizado para estimar nitidez mediante la varianza de sus respuestas |
+| Contraste | Dispersión de intensidades medida mediante desviación estándar |
+| CLAHE | Mejora local de contraste con límite para evitar amplificación excesiva |
+| Pipeline | Cadena completa de etapas conectadas desde el video hasta el PDF |
+| Contrato | Estructura de datos acordada entre dos módulos |
+| Tema | Grupo ordenado de capturas, cerrado opcionalmente por `FIN_DE_TEMA` |
+| ReportLab | Biblioteca que construye y maqueta el PDF |
+| Fast-forward | Avance de una rama hasta un descendiente sin crear un merge commit |
+
+Convenciones de lenguaje:
+
+```text
+frame     → imagen todavía en memoria
+captura   → ganador o registro persistido
+evento    → acción detectada y validada
+categoría → clasificación utilizada por el reporte
+LIBRE / CUBIERTA → estados técnicos de una ROI
+```
+
+La documentación utiliza “pizarra” de forma consistente y denomina **Run All** a la ejecución completa del notebook.
+
+---
+
+# 22. Próximos pasos
+
+La entrega RF01–RF16 está cerrada. Los próximos trabajos, si se autorizan, deben permanecer separados para no mezclar documentación con cambios funcionales:
+
+1. fijar versiones de dependencias y definir una estrategia reproducible;
+2. reducir el consumo de memoria de RF09;
+3. robustecer el selector de archivos y el fallback de RF13;
+4. evaluar una limpieza controlada de outputs con nueva validación Run All;
+5. extraer pruebas o incorporar CI sólo si el proyecto requiere mantenimiento continuo;
+6. evaluar OCR, modelos de visión o resúmenes como extensiones independientes.
+
+Cada iniciativa deberá comenzar desde el notebook canónico y demostrar que no altera los contratos anteriores sin una decisión explícita del equipo.
