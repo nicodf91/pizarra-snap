@@ -4,7 +4,7 @@ Esta carpeta contiene el notebook canónico de Pizarra Snap:
 
 - [`PizarraSnap.ipynb`](PizarraSnap.ipynb)
 
-El documento describe cómo ejecutar la versión actual sin modificar su código, metadata ni outputs.
+Este manual reúne las instrucciones para ejecutar el notebook en Google Colab. Para usar la aplicación local con Python 3.12, consultá la [guía de Streamlit](../README.md#ejecutar-con-streamlit).
 
 ## 1. Entorno soportado
 
@@ -26,7 +26,7 @@ No se garantiza un tiempo exacto de ejecución. El tiempo depende del runtime de
 3. Abrir [`notebooks/PizarraSnap.ipynb`](PizarraSnap.ipynb).
 4. Descargar el archivo o abrirlo en Google Colab.
 
-El notebook de `main` es la fuente de verdad funcional del proyecto.
+El notebook de `main` conserva la implementación de referencia de RF01–RF16 y sus comprobaciones originales.
 
 ## 3. Obtener el video oficial
 
@@ -155,7 +155,7 @@ Estos valores documentan una corrida concreta. Otro video puede producir cantida
 | Pillow | Instalado por el notebook |
 | pypdf | Instalado por el notebook |
 
-Las versiones no están fijadas. Definir versiones reproducibles es una mejora futura y no forma parte de la actualización documental actual.
+El notebook de Colab instala sus dependencias sin fijar versiones. La aplicación local usa las versiones declaradas en [requirements.txt](../requirements.txt).
 
 ## 13. Problemas frecuentes
 
@@ -181,5 +181,5 @@ Permitir descargas para Colab o utilizar la recuperación manual mientras la ses
 
 ## Documentación relacionada
 
-- [Presentación y onboarding general](../README.md)
+- [Presentación del proyecto e instalación local](../README.md)
 - [Arquitectura, RF, contratos, decisiones e historia](../PLAN_TRABAJO_PIZARRA_SNAP.md)

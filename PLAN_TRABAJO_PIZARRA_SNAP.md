@@ -1,10 +1,8 @@
 # Pizarra Snap — Plan de trabajo colaborativo
 
-**Proyecto:** Pizarra Snap  
-**Equipo actual:** Nicolás, Diego, Walter y Daniela  
-**Documento vivo:** combina el estado técnico actual con las decisiones y la historia de integración.
+El equipo activo está formado por **Nicolás, Diego y Daniela**. Walter participó en el desarrollo original. El registro de [autoría y responsabilidad funcional](#autoría-git-y-responsabilidad-funcional) conserva las contribuciones de los cuatro integrantes.
 
-**Última actualización:** 21/08/2026
+Actualizado el 10/11/2026.
 
 ---
 
@@ -50,27 +48,17 @@ El sistema detecta visualmente el evento, espera a que la zona vuelva a quedar v
 
 > La arquitectura vigente trabaja con frames **posteriores al evento**. No se utiliza un buffer retrospectivo como parte del flujo principal.
 
-El alcance validado utiliza un video pregrabado y una cámara fija. No incluye captura de cámara en vivo, OCR ni generación de resúmenes mediante modelos de IA.
+El alcance validado es un MP4 pregrabado con cámara fija. La interfaz local permite cargar el video, generar el PDF y descargarlo.
 
 ---
 
 ## 2. Estado consolidado y criterio general
 
-> **Estado actual:** RF01–RF16 están implementados en `main`. El notebook canónico fue ejecutado mediante Run All en Google Colab con el video oficial y generó correctamente las capturas y el PDF final.
+Integramos el MVP de Streamlit en `main` con el [PR #5](https://github.com/nicodf91/pizarra-snap/pull/5), en el commit [`c073fac`](https://github.com/nicodf91/pizarra-snap/commit/c073fac2486e3d81865ca205876e2f42c6c0fc30). La [aplicación local](README.md#ejecutar-con-streamlit) reutiliza RF01–RF16 y conserva los algoritmos y el diseño del PDF.
 
-La versión consolidada llegó a `main` mediante fast-forward en el commit:
+[app.py](app.py) recibe un MP4 y lo copia por bloques a un directorio temporal propio de cada ejecución. [pipeline.py](pipeline.py) recibe la ruta del video y ese directorio de trabajo. La función `procesar_video()` devuelve la ruta del PDF y un resumen sin imágenes. La interfaz conserva el PDF en la sesión para descargarlo sin volver a procesar el video. Si se adjunta otro archivo, retira el resultado anterior.
 
-```text
-5900fa5a7d982e408259760617fde1f613426f79
-```
-
-El notebook validado conserva el hash:
-
-```text
-583c2db6bb67f59db5d6df5155a1686ce12ee221
-```
-
-Los valores observados en la corrida oficial —tres eventos, 57 candidatos por evento, tres capturas, un tema cerrado y un PDF de tres páginas— son resultados de validación. No constituyen constantes universales del algoritmo.
+El [notebook original](notebooks/PizarraSnap.ipynb) conserva el hash Git `583c2db6bb67f59db5d6df5155a1686ce12ee221` y sigue siendo una alternativa funcional en [Google Colab](notebooks/README.md). Las [pruebas del MVP](#16-estado-técnico-consolidado) compararon el módulo local con el flujo original.
 
 ### Arquitectura funcional y decisiones consolidadas
 
@@ -83,12 +71,12 @@ VIDEO → ROI E HISTOGRAMAS → EVENTOS → CANDIDATOS
 |---|---|
 | Ventana posterior | RF08/RF09 recolectan frames después de confirmar el evento; el flujo principal no usa un buffer retrospectivo |
 | Detección visual | RF03–RF05 utilizan ROI fijas, histogramas y distancia de Bhattacharyya con umbral `0.40` |
-| Contrato en memoria | Walter recibe los candidatos de Diego sin volver a abrir ni reposicionar el video |
+| Contrato en memoria | La etapa de selección recibe los candidatos de RF09 sin volver a abrir ni reposicionar el video |
 | Selección relativa | RF10 compara nitidez, estabilidad y contraste dentro de cada evento con pesos 55/30/15 |
 | Original preservada | RF12 guarda el ganador; RF15 conserva CLAHE sólo cuando mejora las métricas y nunca reemplaza la original |
 | Contrato liviano | RF13 entrega identidades y rutas a RF14/RF16 en lugar de duplicar frames completos |
-| Generación y descarga separadas | RF16 genera y valida el PDF; la última celda inicia la descarga en Colab |
-| Entorno canónico | El recorrido operativo actual utiliza Google Colab y almacenamiento efímero de sesión |
+| Generación y descarga separadas | RF16 genera el PDF. La app ofrece una descarga desde la sesión y la última celda del notebook inicia la descarga en Colab |
+| Entornos | Python 3.12 y Streamlit para la aplicación local. Google Colab para ejecutar el notebook original |
 
 ### Criterio general de trabajo
 
@@ -123,9 +111,9 @@ Durante la integración, cada módulo siguió estos criterios:
 
 # 4. Matriz maestra RF01–RF16
 
-| RF | Responsable | Objetivo | Entrada | Proceso | Salida | Dependencia anterior | Entrega a | Estado | Limitación |
+| RF | Autoría funcional original | Objetivo | Entrada | Proceso | Salida | Dependencia anterior | Entrega a | Estado | Limitación |
 |---|---|---|---|---|---|---|---|---|---|
-| RF01 | Nicolás | Cargar y abrir el video | MP4 seleccionado | `files.upload` y `cv2.VideoCapture` | Video, FPS, resolución y duración | — | RF02 | ✅ VALIDADO | El selector espera al menos un archivo |
+| RF01 | Nicolás | Cargar y abrir el video | MP4 seleccionado | Carga desde la interfaz o Colab y apertura con `cv2.VideoCapture` | Video y propiedades del archivo | — | RF02 | ✅ VALIDADO | El MP4 debe poder decodificarse |
 | RF02 | Nicolás | Leer y comprender frames | Video abierto | Lectura BGR y análisis NumPy | Frame y propiedades de píxel | RF01 | RF03 | ✅ VALIDADO | Depende de una lectura válida |
 | RF03 | Nicolás | Definir las tres ROI | Frame completo | Coordenadas y slicing | Tres ROI y sus coordenadas | RF02 | RF04 | ✅ VALIDADO | ROI fijas para cámara y resolución actuales |
 | RF04 | Nicolás | Representar visualmente cada ROI | ROI BGR | Gris, Gaussian Blur, histograma y L1 | Histograma normalizado | RF03 | RF05 | ✅ VALIDADO | El histograma no conserva posición espacial |
@@ -140,7 +128,7 @@ Durante la integración, cada módulo siguió estos criterios:
 | RF13 | Daniela | Clasificar y aligerar el contrato | `resultados_walter` | Mapping de evento y selección de ruta | `resultados_reporte` | RF12/RF15 | RF14 | ✅ VALIDADO | Fallback con margen de robustez futura |
 | RF14 | Daniela | Organizar por temas | Registros ordenados | Agrupación y cierre por `FIN_DE_TEMA` | Lista de temas | RF13 | RF16 | ✅ VALIDADO | Depende del orden de eventos |
 | RF15 | Walter | Mejorar opcionalmente | Frame ganador BGR | Gris + CLAHE con criterios medibles | Procesada o `None` + evaluación | RF11 | RF13 | ✅ VALIDADO | Umbrales heurísticos; original preservada |
-| RF16 | Daniela | Generar el reporte | Temas, destino y datos de portada | Validación, maquetación ReportLab y apertura con pypdf | `Path` del PDF | RF14 | Usuario | ✅ VALIDADO | Páginas variables; dependencias sin versión |
+| RF16 | Daniela | Generar el reporte | Temas, destino y datos de portada | Validación, maquetación ReportLab y apertura con pypdf | `Path` del PDF | RF14 | Usuario | ✅ VALIDADO | Páginas variables según las capturas y los temas |
 
 ---
 
@@ -172,7 +160,7 @@ Construir la base de visión por computadora del proyecto: leer el video, trabaj
 
 ## RF01 — Lectura de video
 
-### Trabajo realizado
+### Trabajo original en Colab
 
 - Se creó el notebook principal en Google Colab.
 - Se cargaron las librerías iniciales:
@@ -642,7 +630,7 @@ Cada `frames_candidatos` guarda frames completos en memoria, con resolución com
 171 candidatos simultáneos = 1.063.756.800 bytes ≈ 1.014 MiB
 ```
 
-Esta estimación no incluye el overhead de Python, OpenCV, listas ni métricas. El video actual procesa correctamente y Walter vacía cada lista de candidatos después de seleccionar y guardar el ganador. No es bloqueante para la entrega, pero queda como deuda técnica para videos más largos, resoluciones mayores o una cantidad superior de eventos.
+Esta estimación abarca solo los candidatos. El módulo de selección vacía cada lista después de guardar el ganador, por lo que las listas se acumulan antes de ese paso. El pico real de memoria también depende del entorno y de las demás etapas.
 
 ---
 
@@ -710,7 +698,7 @@ Los nombres tienen este formato ordenado:
 captura_001_captura_normal_<momento_ms>ms.png
 ```
 
-En Colab se usa `/content/capturas_pizarra_snap`; en ejecución local, el directorio temporal del sistema. Así las imágenes generadas no contaminan el repositorio.
+En Colab las capturas se guardan en `/content/capturas_pizarra_snap`. En el MVP se crean dentro del directorio temporal de cada ejecución y se eliminan cuando termina la generación del reporte.
 
 ---
 
@@ -915,7 +903,7 @@ CONCEPTO_IMPORTANTE  37,512 s   57 candidatos
 FIN_DE_TEMA          50,548 s   57 candidatos
 ```
 
-Walter produjo tres capturas originales válidas. RF13 generó tres `resultados_reporte`, RF14 conservó las tres capturas en un único tema cerrado y RF16 generó un PDF final válido de tres páginas con el diseño original de Daniela restaurado.
+La etapa de selección produjo tres capturas originales válidas. RF13 generó tres `resultados_reporte`, RF14 conservó las tres capturas en un único tema cerrado y RF16 generó un PDF final válido de tres páginas con el diseño original de Daniela restaurado.
 
 ### Extensión futura
 
@@ -1003,13 +991,13 @@ Walter  — RF10–RF12 y RF15
 Daniela — RF13–RF14 y RF16
 ```
 
-Las ramas originales `seleccionFrame` y `feature/rf13-rf14-rf16-daniela` permanecen preservadas como evidencia. `seleccionFrame` se auditó sin unir su historia Git no relacionada.
+Preservamos las ramas originales `seleccionFrame` y `feature/rf13-rf14-rf16-daniela` como evidencia de los aportes. El catálogo y la planificación de Daniela se incorporan por archivo, desde `docs/documentacion-proyecto`, con referencia a su [commit original `96ce561`](https://github.com/nicodf91/pizarra-snap/commit/96ce561c5350a9b9620eb133b42c433e81ed10b3).
 
 ---
 
 # 10. Revisión cruzada
 
-Durante el desarrollo se propuso que cada módulo tuviera un responsable principal y una revisión cruzada antes de integrarlo a `main`. La tabla conserva esa asignación como parte de la metodología utilizada.
+La tabla conserva el reparto de revisiones propuesto durante el desarrollo original.
 
 | Responsable | Revisor sugerido |
 |---|---|
@@ -1030,37 +1018,16 @@ La revisión no significa volver a desarrollar el módulo. Consiste en:
 
 # 11. Organización actual del repositorio
 
-```text
-pizarra-snap/
-│
-├── .gitignore
-├── README.md
-├── PLAN_TRABAJO_PIZARRA_SNAP.md
-│
-└── notebooks/
-    ├── README.md
-    └── PizarraSnap.ipynb
-```
-
-## Archivos principales
-
-### `README.md`
-
-Portada del proyecto: objetivo, equipo actual, estado resumido, flujo general y enlaces importantes.
-
-### `PLAN_TRABAJO_PIZARRA_SNAP.md`
-
-Este documento. Contiene la planificación detallada, responsabilidades, dependencias, revisiones y registro de avances.
-
-### `notebooks/PizarraSnap.ipynb`
-
-Notebook canónico y fuente de verdad funcional.
-
-### `notebooks/README.md`
-
-Manual operativo para ejecutar el notebook en Google Colab.
-
-> Nuevas carpetas como `data/`, `docs/` o `captures/` se crearán solamente cuando exista una necesidad concreta. No se documentarán como parte de la estructura actual antes de existir.
+| Archivo | Uso |
+|---|---|
+| [README.md](README.md) | Presentación, instalación y uso del MVP |
+| [PLAN_TRABAJO_PIZARRA_SNAP.md](PLAN_TRABAJO_PIZARRA_SNAP.md) | Estado técnico, decisiones e historia de integración |
+| [app.py](app.py) | Carga del MP4, generación y descarga del reporte en Streamlit |
+| [pipeline.py](pipeline.py) | Ejecución de RF01–RF16 fuera de Colab |
+| [requirements.txt](requirements.txt) | Dependencias fijadas del entorno local |
+| [notebooks/PizarraSnap.ipynb](notebooks/PizarraSnap.ipynb) | Implementación original de referencia |
+| [notebooks/README.md](notebooks/README.md) | Manual para ejecutar el notebook en Google Colab |
+| [docs/REQUERIMIENTOS.md](docs/REQUERIMIENTOS.md) y [docs/GANTT.md](docs/GANTT.md) | Catálogo y planificación original de Daniela, con notas de alcance del MVP |
 
 ---
 
@@ -1161,7 +1128,7 @@ Evitar comentarios conversacionales como:
 
 # 15. Checklist de consolidación completado
 
-La versión actual superó los controles relevantes para su incorporación a `main`:
+Antes de incorporar el notebook a `main`, completamos estos controles.
 
 - [x] El código ejecutó sin errores mediante Run All con el video oficial.
 - [x] Las entradas y salidas de los módulos quedaron documentadas.
@@ -1179,29 +1146,22 @@ Para cambios futuros deben repetirse controles proporcionales al alcance. Un cam
 
 # 16. Estado técnico consolidado
 
-Los RF01–RF16 están conectados y validados de punta a punta en `main`, commit `5900fa5a7d982e408259760617fde1f613426f79`.
+Validamos el MVP con Python 3.12.14 y Streamlit 1.67.0. Con el video oficial obtuvimos estos resultados.
 
-La validación incluye análisis sintáctico, Run All con el video oficial, archivos generados, descarga automática del PDF, diseño visual original de Daniela y preservación de los comentarios y Markdown compatibles del equipo.
+| Resultado | Observación |
+|---|---|
+| Comandos en orden | `CAPTURA_NORMAL` → `CONCEPTO_IMPORTANTE` → `FIN_DE_TEMA` |
+| Frames candidatos | 57 por evento |
+| Capturas seleccionadas | 3 |
+| Temas | 1 tema cerrado |
+| Reporte | PDF legible de 3 páginas con el diseño original de Daniela |
 
-La prueba manual final se realizó descargando el notebook directamente desde `main` y cargándolo en Google Colab. El resultado fue:
+- **Paridad del pipeline.** Comparamos el módulo con las celdas originales usando el mismo MP4. Coincidieron los eventos, los tiempos, los candidatos, los índices ganadores, las métricas, los PNG y el tema. Las tres páginas coincidieron píxel por píxel al renderizarlas con Poppler a 90 dpi. Poppler emitió los mismos avisos de fuentes en ambos PDF.
+- **Interfaz.** En Chromium cargamos el video oficial, vimos el indicador de procesamiento y descargamos dos veces un PDF idéntico. Probamos también un MP4 vacío y uno ilegible con el mismo nombre que el oficial.
+- **Estado y errores.** Streamlit AppTest verificó la corrida oficial y que una nueva ejecución de la interfaz conserva la descarga sin reprocesar. Al reemplazar el MP4, se elimina el resultado anterior. Los archivos vacíos o ilegibles muestran un error.
+- **Entorno y pruebas de módulos.** Pasó `pip check`. Ejecutamos los casos sintéticos originales de selección, clasificación, temas y generación del reporte sobre el módulo extraído. También verificamos el caso sin eventos y la limpieza ante un fallo al generar el PDF.
 
-```text
-3 eventos detectados
-57 frames candidatos por evento
-3 capturas seleccionadas
-1 tema cerrado
-PDF final de 3 páginas
-descarga automática correcta
-```
-
-La portada conservó los datos acordados:
-
-```text
-INSTITUCIÓN: UTN
-MATERIA: DIPLOMATURA EN IA
-```
-
-La incorporación a `main` se completó mediante fast-forward. El número de eventos, candidatos, temas y páginas corresponde a esta corrida de validación y puede variar con otras entradas.
+La [corrida de referencia en Colab](notebooks/README.md#11-resultado-de-la-corrida-oficial-validada) sigue documentada por separado. Los resultados corresponden al MP4 oficial.
 
 ---
 
@@ -1339,7 +1299,11 @@ validación intermedia → PDF de 4 páginas
 restauración y renderer consolidado → PDF final de 3 páginas en la corrida oficial
 ```
 
-El número de páginas depende de las capturas, los temas y la maquetación; no es una constante de RF16.
+El número de páginas depende de las capturas, los temas y la maquetación.
+
+## 10/11/2026 — Integración de Streamlit
+
+Incorporamos `app.py`, `pipeline.py` y `requirements.txt` mediante el [PR #5](https://github.com/nicodf91/pizarra-snap/pull/5). El notebook conservó el mismo hash. La [validación del MVP](#16-estado-técnico-consolidado) registra la paridad con el flujo original y las pruebas de la interfaz local.
 
 ---
 
@@ -1383,7 +1347,8 @@ Una limitación describe el alcance dentro del cual el sistema fue validado. No 
 | RF09 | LIMITACIÓN | Se conservan frames completos durante las ventanas posteriores | El consumo crece con resolución, FPS y eventos |
 | RF10 | DECISIÓN DE DISEÑO | El score relativo pondera 55% nitidez, 30% estabilidad y 15% contraste | Funciona para la validación actual; no es un modelo universal |
 | RF13 | MEJORA FUTURA | El fallback prioriza una ruta procesada existente y luego la original | Existe margen de robustez adicional ante un archivo existente pero corrupto |
-| Colab | DECISIÓN DE DISEÑO | El flujo canónico utiliza `google.colab` para upload y download | Jupyter local requiere adaptación |
+| Entrada | LIMITACIÓN | El MVP procesa MP4 pregrabados que OpenCV puede abrir | El códec, los FPS y la lectura de los frames afectan el procesamiento |
+| Colab | DECISIÓN DE DISEÑO | El notebook usa `google.colab` para cargar el video y descargar el PDF | La aplicación local tiene su propia interfaz de carga y descarga |
 
 No se detectó un bug bloqueante en el flujo validado.
 
@@ -1391,19 +1356,16 @@ No se detectó un bug bloqueante en el flujo validado.
 
 # 20. Deuda técnica y mejoras futuras
 
-La deuda técnica identifica trabajo posible para mejorar escalabilidad, reproducibilidad o mantenimiento. No debe confundirse con un requisito incompleto de la entrega actual.
+| Tema | Estado actual | Trabajo pendiente |
+|---|---|---|
+| Envío por email | El MVP genera el PDF y ofrece su descarga | Diseñar e implementar el envío opcional |
+| Memoria de RF09 | Los 171 candidatos de la corrida oficial suman cerca de 1 GiB sin contar las demás etapas | Medir el pico con más videos y evaluar cómo reducirlo preservando la selección |
+| Otros videos | El encuadre, las ROI y el umbral se probaron con el video oficial | Ampliar la validación con otras resoluciones, FPS e iluminación antes de ajustar la calibración |
+| Dependencias | La app local tiene versiones fijadas en [requirements.txt](requirements.txt). Colab instala algunas bibliotecas sin versiones | Evaluar la reproducibilidad del entorno alternativo |
+| Notebook y pruebas | El notebook conserva sus salidas y casos sintéticos. Verificamos el MVP por fuera del notebook | Revisar la automatización de pruebas y, en una tarea aparte, el tamaño de las salidas guardadas |
+| Robustez de RF13 | Una ruta existente pero ilegible puede terminar en un marcador de imagen no disponible | Evaluar el fallback al PNG original cuando la versión procesada esté dañada |
 
-| Tema | Clasificación | Estado | Posible evolución |
-|---|---|---|---|
-| Memoria RF09 | DEUDA TÉCNICA | Los candidatos completos pueden superar 1 GiB en la corrida oficial | Evaluación streaming, muestreo o almacenamiento comprimido |
-| Dependencias | DEUDA TÉCNICA | ReportLab, Pillow y pypdf se instalan sin versiones; Colab provee el resto | Fijar versiones en una tarea independiente |
-| Outputs del notebook | DEUDA TÉCNICA | Los outputs persistidos hacen que el notebook pese aproximadamente 10,7 MB | Normalizar en una tarea separada y repetir Run All |
-| Selector de archivos | MEJORA FUTURA | Cero o múltiples archivos no tienen manejo robusto | Validar cantidad, cancelación y extensión |
-| Automatización | MEJORA FUTURA | Las pruebas viven dentro del notebook y no existe CI | Extraer pruebas sólo si el proyecto evoluciona hacia mantenimiento continuo |
-| Generalización | MEJORA FUTURA | ROI, referencia libre y umbral están calibrados para el video oficial | Incorporar una fase de calibración explícita |
-| Extensiones | MEJORA FUTURA | OCR, modelos de visión y resúmenes no forman parte del flujo actual | Evaluar después de preservar la estabilidad de RF01–RF16 |
-
-Ninguna de estas mejoras se implementa durante una actualización exclusivamente documental.
+OCR, resúmenes y cámara en vivo quedan fuera del alcance validado.
 
 ---
 
@@ -1449,13 +1411,4 @@ La documentación utiliza “pizarra” de forma consistente y denomina **Run Al
 
 # 22. Próximos pasos
 
-La entrega RF01–RF16 está cerrada. Los próximos trabajos, si se autorizan, deben permanecer separados para no mezclar documentación con cambios funcionales:
-
-1. fijar versiones de dependencias y definir una estrategia reproducible;
-2. reducir el consumo de memoria de RF09;
-3. robustecer el selector de archivos y el fallback de RF13;
-4. evaluar una limpieza controlada de outputs con nueva validación Run All;
-5. extraer pruebas o incorporar CI sólo si el proyecto requiere mantenimiento continuo;
-6. evaluar OCR, modelos de visión o resúmenes como extensiones independientes.
-
-Cada iniciativa deberá comenzar desde el notebook canónico y demostrar que no altera los contratos anteriores sin una decisión explícita del equipo.
+El [registro de mejoras](#20-deuda-técnica-y-mejoras-futuras) reúne el trabajo pendiente. Al incorporar cambios funcionales, repetiremos la prueba con el MP4 oficial para comprobar que se conservan los resultados de RF01–RF16.

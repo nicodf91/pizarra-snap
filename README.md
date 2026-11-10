@@ -1,224 +1,56 @@
 # Pizarra Snap
 
-Sistema de visión por computadora que permite registrar contenido de una pizarra mediante tres comandos visuales. El docente activa cada comando cubriendo brevemente una zona de la pizarra; el sistema detecta la acción, elige una captura de buena calidad y genera un reporte PDF organizado por temas.
+Pizarra Snap convierte un video pregrabado de una pizarra en un PDF organizado por temas. Durante la grabación, el docente activa tres comandos cubriendo brevemente las zonas marcadas en la pizarra.
 
-Proyecto colaborativo desarrollado para la **Diplomatura en Inteligencia Artificial**.
+- **Captura normal** registra el contenido general.
+- **Concepto importante** destaca una captura en el reporte.
+- **Fin de tema** incluye la captura y cierra el tema en curso.
 
-## Estado actual
+Cuando la zona vuelve a quedar visible, el sistema reúne una ventana corta de frames y elige el de mejor calidad. Desarrollamos el proyecto para la **Diplomatura en Inteligencia Artificial**.
 
-Los requerimientos RF01–RF16 están implementados y conectados de punta a punta en `main`.
+## Ejecutar con Streamlit
 
-- Rama canónica: `main`
-- Versión consolidada: `5900fa5a7d982e408259760617fde1f613426f79`
-- Notebook oficial: [`notebooks/PizarraSnap.ipynb`](notebooks/PizarraSnap.ipynb)
-- Entorno soportado actualmente: Google Colab
+El entorno local usa **Python 3.12** y las versiones de [requirements.txt](requirements.txt). Desde la raíz del repositorio, ejecutá estos comandos en PowerShell.
 
-La versión consolidada se incorporó a `main` mediante fast-forward, sin reescribir la historia de los aportes. El notebook actual fue descargado desde `main`, ejecutado con **Run All** en Google Colab y validado manualmente de principio a fin con el video oficial.
-
-### Resultado de la corrida de validación con el video oficial
-
-| Resultado | Valor observado |
-|---|---:|
-| Eventos detectados | 3 |
-| Orden | `CAPTURA_NORMAL` → `CONCEPTO_IMPORTANTE` → `FIN_DE_TEMA` |
-| Frames candidatos por evento | 57 |
-| Capturas seleccionadas | 3 |
-| Temas generados | 1 tema cerrado |
-| Páginas del PDF | 3 |
-| Descarga del PDF | Automática en Google Colab |
-
-Estos valores describen **la corrida oficial validada**. No son constantes del algoritmo: pueden cambiar con otro video, FPS, duración, cantidad de eventos o contenido de la clase.
-
-El PDF conservó el diseño visual original de Daniela. La portada validada utiliza:
-
-```text
-INSTITUCIÓN: UTN
-MATERIA: DIPLOMATURA EN IA
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
-## Qué problema resuelve
+En macOS o Linux, después de crear el entorno, ejecutá los dos últimos comandos con `.venv/bin/python`.
 
-Pizarra Snap permite que un docente solicite capturas sin usar teclado, mouse, botones electrónicos ni comandos de voz. La interacción se realiza mediante tres zonas visuales:
+1. Abrí la URL local que muestra Streamlit, normalmente [localhost:8501](http://localhost:8501).
+2. Adjuntá un MP4 y elegí **Generar PDF**. Para repetir nuestra prueba, usá el [video oficial](PLAN_TRABAJO_PIZARRA_SNAP.md#12-video-de-prueba).
+3. Cuando el reporte esté listo, elegí **Descargar PDF**. La aplicación conserva el PDF durante la sesión y retira el resultado anterior al cambiar de video.
 
-- **Captura normal:** registra contenido general.
-- **Concepto importante:** marca una captura con tratamiento destacado en el reporte.
-- **Fin de tema:** incluye la captura actual y cierra el tema en el PDF.
+El envío por email queda pendiente.
 
-Cuando una zona vuelve a quedar libre, el sistema conserva una ventana breve de frames posteriores. Esto evita elegir inmediatamente una imagen que todavía pueda mostrar la mano o el borrador en movimiento.
+## Alcance y validación
 
-## Cómo funciona
+Integramos el MVP en [el PR #5](https://github.com/nicodf91/pizarra-snap/pull/5). Con el video oficial obtuvimos **3 capturas, 1 tema cerrado y un PDF de 3 páginas**. Comprobamos la descarga en Chromium y verificamos el resultado mediante Streamlit AppTest. El [plan de trabajo](PLAN_TRABAJO_PIZARRA_SNAP.md#16-estado-técnico-consolidado) detalla las pruebas.
 
-```mermaid
-flowchart TD
-    A[Video cargado en Colab] --> B[Nicolás · RF01–RF05<br/>video, frames, ROI, histogramas y cambio visual]
-    B --> C[Diego · RF06–RF09<br/>eventos, validación y frames candidatos]
-    C --> D[Walter · RF10–RF12 y RF15<br/>calidad, selección, guardado y mejora opcional]
-    D --> E[Daniela · RF13–RF14 y RF16<br/>categorías, temas y reporte]
-    E --> F[PDF final]
-    F --> G[Descarga automática en Colab]
-```
+Las tres regiones de interés están ajustadas al encuadre del video oficial y deben estar libres alrededor del segundo 0,5. Otros encuadres, cambios de iluminación o distinta resolución pueden afectar la detección. El consumo de memoria aumenta con la resolución, la cantidad de frames por segundo y los eventos detectados. Los resultados de la corrida oficial corresponden a ese archivo.
 
-### Pipeline técnico
+## Google Colab
 
-```text
-VIDEO
-  ↓
-FRAMES BGR
-  ↓
-REGIONES DE INTERÉS (ROI)
-  ↓
-HISTOGRAMAS NORMALIZADOS
-  ↓
-ESTADO LIBRE / CUBIERTA
-  ↓
-EVENTO VALIDADO
-  ↓
-VENTANA TEMPORAL POSTERIOR
-  ↓
-FRAMES CANDIDATOS
-  ↓
-EVALUACIÓN DE CALIDAD
-  ↓
-MEJOR FRAME + PNG
-  ↓
-PROCESAMIENTO CLAHE OPCIONAL
-  ↓
-CLASIFICACIÓN Y TEMAS
-  ↓
-PDF
-```
+El [notebook original](notebooks/PizarraSnap.ipynb) sigue disponible como alternativa en Google Colab. El [manual del notebook](notebooks/README.md) conserva los pasos de ejecución y descarga automática con el video oficial.
 
-Un **frame candidato** es una imagen del video almacenada durante la ventana posterior al evento. Se conservan varias opciones para que el módulo de Walter pueda seleccionar posteriormente la de mejor calidad.
+## Equipo y contribuciones
 
-Los contratos detallados entre etapas están documentados en [`PLAN_TRABAJO_PIZARRA_SNAP.md`](PLAN_TRABAJO_PIZARRA_SNAP.md).
+El equipo activo está formado por **Nicolás, Diego y Daniela**. Walter participó en el desarrollo original. Conservamos sus aportes y la trazabilidad de los cuatro integrantes.
 
-## Responsabilidades del equipo
-
-| Integrante | Requerimientos | Responsabilidad funcional | Estado |
-|---|---|---|---|
-| Nicolás | RF01–RF05 | Video, frames, ROI, histogramas y detección de cambios | Validado; RF05 conserva una limitación conocida |
-| Diego | RF06–RF09 | Eventos, validación, ventana temporal y frames candidatos | Validado; RF09 conserva una limitación de memoria |
-| Walter | RF10–RF12 y RF15 | Calidad, selección, guardado y procesamiento opcional | Validado |
-| Daniela | RF13–RF14 y RF16 | Clasificación, temas y generación del PDF | Validado |
-
-El **diseño visual original del PDF es de Daniela**. La integración preservó su portada, paleta, logo, wordmark, fondos, tarjetas, jerarquía visual y renglones para notas, adaptándolos al contrato consolidado del pipeline.
-
-La responsabilidad funcional no debe confundirse con la autoría Git de los commits de recuperación. La historia completa se explica en el plan de trabajo.
-
-## Ejecutar en Google Colab
-
-El notebook canónico está diseñado actualmente para Google Colab.
-
-1. Desde la rama `main`, abrir o descargar [`notebooks/PizarraSnap.ipynb`](notebooks/PizarraSnap.ipynb).
-2. Descargar el video oficial [`proyecto_pizzarasnap.mp4`](https://drive.google.com/file/d/1Vcixn88RZXEH3cLLovZQJBfYXKoIKlMb/view?usp=drive_link).
-3. Abrir el notebook en Google Colab.
-4. Seleccionar **Runtime → Run All**.
-5. Cuando aparezca el selector, elegir exactamente `proyecto_pizzarasnap.mp4`.
-6. Esperar a que finalicen RF01–RF16.
-7. La última celda iniciará la descarga del PDF cuando `pdf_path_real` exista.
-
-No se garantiza un tiempo exacto de ejecución. La duración depende del entorno de Colab, el video y los recursos disponibles.
-
-El manual operativo, las rutas temporales y la resolución de problemas se encuentran en [`notebooks/README.md`](notebooks/README.md).
-
-## Entradas y salidas
-
-### Entrada
-
-```text
-proyecto_pizzarasnap.mp4
-```
-
-El video no se almacena en Git porque es un archivo de prueba pesado. El enlace de Google Drive debe conservar permisos de acceso adecuados para el equipo.
-
-### Salidas intermedias
-
-- `capturas`: eventos confirmados con sus frames candidatos.
-- `resultados_walter`: ganador, métricas y rutas persistidas por evento.
-- `resultados_reporte`: registros livianos para clasificación y reporte.
-- `temas`: capturas agrupadas en orden y con estado de cierre.
-- Capturas PNG originales y, cuando aporta valor, versiones procesadas.
-
-### Salida final
-
-```text
-reporte_pizarra_snap_real.pdf
-```
-
-El PDF se genera en almacenamiento temporal y se descarga al finalizar la ejecución en Colab. Su número de páginas depende de los temas y capturas de cada ejecución.
-
-## Tecnologías utilizadas
-
-| Tecnología | Uso actual |
+| Integrante | Aporte original |
 |---|---|
-| Python 3 | Lenguaje y runtime del notebook |
-| Google Colab | Carga del video, ejecución y descarga del PDF |
-| OpenCV | Video, frames, ROI, histogramas, calidad y guardado de imágenes |
-| NumPy | Representación y manipulación de frames |
-| Matplotlib | Visualización didáctica de imágenes e histogramas |
-| ReportLab | Maquetación y generación del PDF |
-| Pillow | Fondos, imágenes y composición visual del reporte |
-| pypdf | Validación del PDF generado |
+| Nicolás | RF01–RF05, lectura del video, frames, regiones de interés e histogramas |
+| Diego | RF06–RF09, detección y validación de eventos y recolección de candidatos |
+| Walter | RF10–RF12 y RF15, evaluación de calidad, selección, guardado y mejora de capturas |
+| Daniela | RF13–RF14 y RF16, clasificación, temas y generación del PDF, incluido su diseño visual original |
 
-OpenCV, NumPy y Matplotlib son provistos normalmente por Google Colab. El notebook instala ReportLab, Pillow y pypdf antes de generar y validar el reporte. Actualmente no se fijan versiones; hacerlo queda como mejora futura de reproducibilidad.
+La [historia de autoría e integración](PLAN_TRABAJO_PIZARRA_SNAP.md#autoría-git-y-responsabilidad-funcional) distingue los aportes originales de los commits que los adaptaron.
 
-### Técnicas evaluadas pero no adoptadas
+## Archivos y documentación
 
-No forman parte del pipeline consolidado:
-
-- threshold adicional;
-- Canny;
-- operaciones morfológicas;
-- corrección de perspectiva.
-
-Estas técnicas se evaluaron, pero no demostraron aportar valor a las capturas del alcance actual y no existe una geometría validada que justifique recorte o perspectiva. La decisión evita agregar transformaciones sin evidencia de mejora.
-
-## Limitaciones conocidas
-
-Estas limitaciones no son errores del flujo validado:
-
-- **RF03 — ROI fijas:** las coordenadas están ajustadas a la cámara y resolución del video actual.
-- **RF05 — umbral experimental:** `0.40` depende de iluminación, cámara, pizarra y posición de las ROI.
-- **Inicio — referencia libre:** el pipeline asume que las tres ROI están libres alrededor del segundo `0.5`.
-- **RF09 — memoria:** conserva frames completos durante las ventanas de captura; el consumo aumenta con resolución, FPS y eventos.
-- **RF10 — score heurístico:** combina 55% nitidez, 30% estabilidad y 15% contraste dentro de cada evento.
-- **RF13 — fallback de imagen:** funciona para las rutas generadas por el pipeline y conserva margen de robustez futura ante archivos corruptos.
-- **Entorno:** el notebook canónico depende actualmente de `google.colab`.
-- **Dependencias:** las versiones no están fijadas.
-- **Tamaño del notebook:** los outputs persistidos hacen que el archivo pese aproximadamente 10,7 MB.
-
-La clasificación completa entre limitación, deuda técnica, decisión de diseño y mejora futura se mantiene en el plan de trabajo.
-
-## Trabajo colaborativo e integración
-
-El proyecto conserva aportes funcionales reales de los cuatro integrantes. Cuando un módulo necesitó adaptación, se siguió este criterio:
-
-```text
-APORTE ORIGINAL
-  ↓
-DESAFÍO DE INTEGRACIÓN
-  ↓
-ADAPTACIÓN NECESARIA
-  ↓
-SOLUCIÓN CONSOLIDADA
-```
-
-Las ramas originales y de recuperación siguen preservadas como evidencia. Los cambios consolidados llegaron a `main` mediante una historia controlada y un fast-forward final.
-
-## Estructura del repositorio
-
-```text
-pizarra-snap/
-├── .gitignore
-├── README.md
-├── PLAN_TRABAJO_PIZARRA_SNAP.md
-└── notebooks/
-    ├── README.md
-    └── PizarraSnap.ipynb
-```
-
-## Documentación
-
-- [Plan técnico, RF, contratos, decisiones e historia](PLAN_TRABAJO_PIZARRA_SNAP.md)
-- [Manual operativo del notebook](notebooks/README.md)
-- [Notebook canónico](notebooks/PizarraSnap.ipynb)
+- [app.py](app.py) contiene la interfaz de Streamlit. [pipeline.py](pipeline.py) ejecuta RF01–RF16 y devuelve el PDF y un resumen.
+- El [plan de trabajo](PLAN_TRABAJO_PIZARRA_SNAP.md) reúne los contratos entre módulos, el estado técnico y las mejoras pendientes.
+- Recuperamos el [catálogo de requerimientos](docs/REQUERIMIENTOS.md) y la [planificación original](docs/GANTT.md) de Daniela.
