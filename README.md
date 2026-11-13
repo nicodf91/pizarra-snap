@@ -24,7 +24,15 @@ En macOS o Linux, después de crear el entorno, ejecutá los dos últimos comand
 2. Adjuntá un MP4 y elegí **Generar PDF**. Para repetir nuestra prueba, usá el [video oficial](PLAN_TRABAJO_PIZARRA_SNAP.md#12-video-de-prueba).
 3. Cuando el reporte esté listo, elegí **Descargar PDF**. La aplicación conserva el PDF durante la sesión y retira el resultado anterior al cambiar de video.
 
-El envío por email queda pendiente.
+### Envío del PDF por email (opcional)
+
+Debajo del botón **Descargar PDF**, la aplicación permite recibir el reporte por correo sin volver a procesar el video. Para activarlo hace falta una cuenta de Gmail emisora y su *contraseña de aplicación*, que Google genera después de activar la verificación en dos pasos.
+
+1. Copiá `.streamlit/secrets.toml.example` como `.streamlit/secrets.toml`.
+2. Completá `usuario` con la dirección de Gmail emisora y `clave` con su contraseña de aplicación.
+3. Reiniciá la aplicación.
+
+El archivo `.streamlit/secrets.toml` está en `.gitignore` y no debe subirse al repositorio. Si no está configurado, el campo y el botón de email quedan desactivados y la descarga sigue disponible. Al elegir el envío, el PDF pasa por los servidores de Gmail.
 
 ## Alcance y validación
 

@@ -1358,7 +1358,7 @@ No se detectó un bug bloqueante en el flujo validado.
 
 | Tema | Estado actual | Trabajo pendiente |
 |---|---|---|
-| Envío por email | El MVP genera el PDF y ofrece su descarga | Diseñar e implementar el envío opcional |
+| Envío por email | Implementado (RF17). Verificamos un envío real a tres casillas el 13/11/2026. Sin configuración, la opción queda desactivada y la descarga sigue disponible | Probar el envío con otras cuentas emisoras. Antes de publicar la app en línea, limitar los destinatarios para evitar el uso indebido de la cuenta |
 | Memoria de RF09 | Los 171 candidatos de la corrida oficial suman cerca de 1 GiB sin contar las demás etapas | Medir el pico con más videos y evaluar cómo reducirlo preservando la selección |
 | Otros videos | El encuadre, las ROI y el umbral se probaron con el video oficial | Ampliar la validación con otras resoluciones, FPS e iluminación antes de ajustar la calibración |
 | Dependencias | La app local tiene versiones fijadas en [requirements.txt](requirements.txt). Colab instala algunas bibliotecas sin versiones | Evaluar la reproducibilidad del entorno alternativo |

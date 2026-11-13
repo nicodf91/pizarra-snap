@@ -44,6 +44,12 @@ Conservamos el catálogo elaborado por Daniela Ferranti en el [commit `96ce561`]
 | RF14 | Organización por temas: agrupa las capturas en bloques temáticos, delimitados por `FIN_DE_TEMA`. |
 | RF16 | Generación de reporte PDF: genera el documento final con identidad visual, organizado por tema. |
 
+### Interfaz web — RF17
+
+| RF | Descripción |
+|---|---|
+| RF17 | Envío del reporte por email (opcional): desde la interfaz, el usuario puede recibir por correo el PDF ya generado, sin volver a procesar el video. Requiere una cuenta emisora configurada en un archivo local de secretos; sin esa configuración, la opción queda desactivada y la descarga sigue disponible. El PDF pasa por el servidor de correo del proveedor, por lo que este envío es una excepción al procesamiento local (RNF08) y solo ocurre si el usuario lo solicita. |
+
 ---
 
 ## Requerimientos No Funcionales
