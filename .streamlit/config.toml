@@ -1,0 +1,11 @@
+# Tema visual de Pizarra Snap: colores tomados del PDF (verde azulado y ámbar).
+[theme]
+primaryColor = "#1F7A74"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#EEF5F4"
+textColor = "#1F2933"
+font = "sans serif"
+
+[client]
+# Menos elementos de desarrollo en pantalla (oculta el botón de despliegue).
+toolbarMode = "minimal"
