@@ -33,3 +33,6 @@ htmlcov/
 *.tmp
 *.bak
 *~
+
+# Secretos de Streamlit
+.streamlit/secrets.toml
