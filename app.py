@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 
 import streamlit as st
 
+from email_sender import email_valido, enviar_pdf, leer_credenciales
 from pipeline import procesar_video
 
 
@@ -26,6 +27,35 @@ def generar_pdf(video):
             copyfileobj(video, archivo, length=1024 * 1024)
         ruta_pdf, resumen = procesar_video(ruta_video, trabajo)
         return ruta_pdf.read_bytes(), resumen
+
+
+def mostrar_envio_por_email(pdf):
+    """Permite recibir el PDF ya generado por correo, sin reprocesar el video."""
+    st.divider()
+    st.subheader("Recibir el PDF por email")
+    credenciales = leer_credenciales(st.secrets)
+    if credenciales is None:
+        st.caption(
+            "El envío por email no está configurado en este equipo. "
+            "Podés descargar el PDF."
+        )
+    destino = st.text_input(
+        "Tu email",
+        key="email_destino",
+        disabled=credenciales is None,
+    )
+    if st.button("Enviar por email", disabled=credenciales is None):
+        if not email_valido(destino):
+            st.error("Escribí un email válido.")
+            return
+        try:
+            with st.spinner("Enviando el PDF…"):
+                enviar_pdf(destino, pdf, credenciales)
+        except Exception:
+            logger.exception("No se pudo enviar el PDF por email")
+            st.error("No se pudo enviar el correo. Volvé a intentarlo.")
+        else:
+            st.success(f"Te enviamos el PDF a {destino.strip()}.")
 
 
 def main():
@@ -79,6 +109,7 @@ def main():
         mime="application/pdf",
         on_click="ignore",
     )
+    mostrar_envio_por_email(pdf)
 
 
 if __name__ == "__main__":
