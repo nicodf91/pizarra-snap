@@ -62,3 +62,12 @@ La [historia de autoría e integración](PLAN_TRABAJO_PIZARRA_SNAP.md#autoría-g
 - [app.py](app.py) contiene la interfaz de Streamlit. [pipeline.py](pipeline.py) ejecuta RF01–RF16 y devuelve el PDF y un resumen.
 - El [plan de trabajo](PLAN_TRABAJO_PIZARRA_SNAP.md) reúne los contratos entre módulos, el estado técnico y las mejoras pendientes.
 - Recuperamos el [catálogo de requerimientos](docs/REQUERIMIENTOS.md) y la [planificación original](docs/GANTT.md) de Daniela.
+
+## Skills para Codex y Claude Code
+
+Las skills son guías de desarrollo. [AGENTS.md](AGENTS.md) reúne las reglas comunes del repositorio. Cada `SKILL.md` describe un procedimiento para una tarea concreta. Los [procedimientos canónicos](.agents/skills/orquestador-pizarra-snap/SKILL.md) viven en `.agents/skills/`. [CLAUDE.md](CLAUDE.md) importa las reglas comunes y los adaptadores de `.claude/skills/` remiten a esos procedimientos.
+
+- **Codex Desktop.** Abrí un chat de Codex desde el checkout que contiene las skills. Buscá `orquestador-pizarra-snap` en el selector de skills del compositor y seleccionala junto con tu pedido. Si no aparece después de cambiar de rama, abrí un chat nuevo desde ese checkout o reiniciá Codex. [Guía de skills de OpenAI](https://learn.chatgpt.com/docs/build-skills).
+- **Claude Code.** Iniciá una sesión en la raíz del checkout. Usá `/` para comprobar que aparecen las cuatro skills y `/memory` para revisar las instrucciones del proyecto. Invocá `/orquestador-pizarra-snap` con tu pedido. [Guía de skills](https://code.claude.com/docs/en/skills) · [Instrucciones e importaciones](https://code.claude.com/docs/en/memory).
+
+Para probar ambos clientes, pedí que indiquen en solo lectura qué revisarían para cambiar los renglones del PDF. El orquestador debería elegir `informe-pdf` y consultar `references/diseno-pdf.md` desde su carpeta canónica. La selección por descripción depende del cliente y de la tarea. Las skills guían al asistente y se aplican con los permisos de su sesión.
