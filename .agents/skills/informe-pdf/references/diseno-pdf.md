@@ -11,7 +11,7 @@ La identidad visual original de Daniela se implementa en [pipeline.py](../../../
 | Portada | `dibujar_portada()` incluye marca, título y ficha. `DATOS_PORTADA_DANIELA` contiene datos de ejemplo, entre ellos UTN y DIPLOMATURA EN IA. `datos_clase` permite sustituirlos en el generador. La fecha usa el día de ejecución cuando falta `fecha_clase`. |
 | Encabezado y pie | `encabezado_pie_pagina()` dibuja el encabezado de marca, un separador y el número de página en el pie. Se aplica a las páginas posteriores a la portada. |
 | Imágenes | `_imagen_para_pdf()` ajusta la imagen al espacio disponible manteniendo la proporción. El alto máximo predeterminado es 96 mm. Usa un marcador si la imagen falta o no puede abrirse. |
-| Tarjetas | `crear_tarjeta_captura()` muestra categoría y momento. Usa borde gris para NORMAL, ámbar para IMPORTANTE y verde para FIN_DE_TEMA. |
+| Tarjetas | `crear_tarjeta_captura()` muestra categoría y momento. Usa borde gris para NORMAL, ámbar para IMPORTANTE y teal (`COLOR_PRIMARIO`, `#157A6E`) para FIN_DE_TEMA. |
 | Notas | NORMAL e IMPORTANTE incluyen «NOTAS DEL DOCENTE» y tres renglones continuos mediante `LINEBELOW`. FIN_DE_TEMA cierra el bloque sin renglones. |
 | Temas | `_crear_bloque_tema()` usa el título numerado y las tarjetas en orden. Indica si el tema quedó abierto. El contenido comienza después de la portada. |
 
